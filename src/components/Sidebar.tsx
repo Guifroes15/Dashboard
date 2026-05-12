@@ -51,6 +51,21 @@ export function Sidebar({ activeTab, setActiveTab, stores }: SidebarProps) {
               </button>
             </li>
           ))}
+
+          <div className="pt-6 pb-2 text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] px-4">Inovações</div>
+          <li>
+            <button
+              onClick={() => setActiveTab('ideas')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'ideas'
+                  ? 'bg-brand-light text-brand-purple border-l-4 border-brand-purple shadow-sm'
+                  : 'text-gray-400 hover:bg-brand-light hover:text-white'
+              }`}
+            >
+              <Lightbulb className="w-5 h-5" />
+              <span className="font-medium">Novas Páginas</span>
+            </button>
+          </li>
         </ul>
       </nav>
       

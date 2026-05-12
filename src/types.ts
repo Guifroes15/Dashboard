@@ -15,3 +15,13 @@ export interface StoreData {
   color: string;
   planos: { tarefa: string; status: 'Alta' | 'Média' | 'Baixa' | 'Sucesso' | 'Teste' }[];
 }
+
+export interface IdeaItem {
+  id: string;
+  title: string;
+  description: string;
+  fluxo?: string;
+  temas?: string[];
+  elementos?: string[];
+  url?: string;
+}

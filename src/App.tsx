@@ -8,6 +8,7 @@ import { Sidebar } from './components/Sidebar';
 import { STORES } from './data';
 import { ConsolidadoView } from './components/views/Consolidado';
 import { StoreDetailView } from './components/views/StoreDetail';
+import { IdeasView } from './components/views/Ideas';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {activeTab === 'consolidado' && <ConsolidadoView />}
+            {activeTab === 'ideas' && <IdeasView />}
             {activeStore && <StoreDetailView store={activeStore} />}
           </motion.div>
         </AnimatePresence>
