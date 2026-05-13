@@ -5,26 +5,26 @@ import { Sparkles, Zap, Palette, Layers, ArrowRight } from 'lucide-react';
 export function IdeasView() {
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <header className="mb-10">
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3">
-          <Sparkles className="w-10 h-10 text-brand-purple" />
-          Projetos: Novas Ideias
+      <header className="mb-8 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3">
+          <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-brand-purple" />
+          Ideias & Estratégias
         </h1>
-        <p className="text-gray-400 font-medium tracking-wide">
+        <p className="text-xs md:text-sm text-gray-400 font-medium tracking-wide leading-relaxed">
           Conceitos estratégicos para aumentar a conversão nas próximas campanhas.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {IDEAS.map((idea) => (
           <div 
             key={idea.id} 
-            className="bg-brand-medium border border-brand-light rounded-2xl p-8 hover:border-brand-purple transition-all duration-300 relative group overflow-hidden"
+            className="bg-brand-medium border border-brand-light rounded-2xl p-6 md:p-8 hover:border-brand-purple transition-all duration-300 relative group overflow-hidden"
           >
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-purple opacity-5 blur-3xl group-hover:opacity-10 transition-opacity" />
             
             <div className="relative z-10">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-4 flex items-center gap-2">
                 {idea.title}
               </h3>
               <p className="text-gray-400 leading-relaxed mb-8 text-sm">
@@ -37,12 +37,12 @@ export function IdeasView() {
                     <Zap className="w-3 h-3" />
                     Fluxo de Conversão
                   </div>
-                  <div className="bg-brand-dark/50 border border-brand-light/20 p-4 rounded-xl text-sm font-medium text-gray-300 flex items-center gap-2">
+                  <div className="bg-brand-dark/50 border border-brand-light/20 p-4 rounded-xl text-xs md:text-sm font-medium text-gray-300 flex items-center gap-2">
                     {idea.fluxo}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <div className="flex items-center gap-2 text-brand-purple-light text-[10px] font-bold uppercase tracking-widest mb-3">
                       <Palette className="w-3 h-3" />

@@ -8,9 +8,9 @@ interface ChartContainerProps {
 
 export function ChartContainer({ title, children }: ChartContainerProps) {
   return (
-    <div className="bg-brand-medium border border-brand-light p-6 rounded-xl">
-      <h3 className="text-md font-semibold mb-6 text-gray-200">{title}</h3>
-      <div className="h-[300px] w-full">
+    <div className="bg-brand-medium border border-brand-light p-4 md:p-6 rounded-xl">
+      <h3 className="text-sm md:text-md font-semibold mb-4 md:mb-6 text-gray-200">{title}</h3>
+      <div className="h-[240px] md:h-[300px] w-full">
         {children}
       </div>
     </div>
