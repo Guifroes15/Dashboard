@@ -8,6 +8,7 @@ export interface MonthData {
   qtdVendas: number;
   ticketMedio: number;
   pctAureFat: number;
+  verba: number; // investimento em mídia naquele mês
 }
 
 export interface StoreDataV2 {
