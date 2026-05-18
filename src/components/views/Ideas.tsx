@@ -6,11 +6,11 @@ export function IdeasView() {
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500">
       <header className="mb-8 md:mb-10">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3 text-[var(--text-primary)]">
           <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-brand-purple" />
           Ideias & Estratégias
         </h1>
-        <p className="text-xs md:text-sm text-gray-400 font-medium tracking-wide leading-relaxed">
+        <p className="text-xs md:text-sm text-[var(--text-secondary)] font-medium tracking-wide leading-relaxed">
           Conceitos estratégicos para aumentar a conversão nas próximas campanhas.
         </p>
       </header>
@@ -24,10 +24,10 @@ export function IdeasView() {
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-purple opacity-5 blur-3xl group-hover:opacity-10 transition-opacity" />
             
             <div className="relative z-10">
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                 {idea.title}
               </h3>
-              <p className="text-gray-400 leading-relaxed mb-8 text-sm">
+              <p className="text-[var(--text-muted)] leading-relaxed mb-8 text-sm">
                 {idea.description}
               </p>
 
@@ -37,7 +37,7 @@ export function IdeasView() {
                     <Zap className="w-3 h-3" />
                     Fluxo de Conversão
                   </div>
-                  <div className="bg-brand-dark/50 border border-brand-light/20 p-4 rounded-xl text-xs md:text-sm font-medium text-gray-300 flex items-center gap-2">
+                  <div className="bg-brand-dark/50 border border-brand-light/20 p-4 rounded-xl text-xs md:text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
                     {idea.fluxo}
                   </div>
                 </div>
@@ -50,7 +50,7 @@ export function IdeasView() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {idea.temas?.map((tema, i) => (
-                        <span key={i} className="px-2 py-1 bg-brand-light/30 rounded text-[10px] text-gray-400 font-medium">
+                        <span key={i} className="px-2 py-1 bg-brand-light/30 rounded text-[10px] text-[var(--text-muted)] font-medium">
                           {tema}
                         </span>
                       ))}
@@ -63,7 +63,7 @@ export function IdeasView() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {idea.elementos?.map((el, i) => (
-                        <span key={i} className="px-2 py-1 bg-brand-light/30 rounded text-[10px] text-gray-400 font-medium">
+                        <span key={i} className="px-2 py-1 bg-brand-light/30 rounded text-[10px] text-[var(--text-muted)] font-medium">
                           {el}
                         </span>
                       ))}
@@ -96,8 +96,8 @@ export function IdeasView() {
       </div>
 
       <div className="mt-12 p-8 bg-brand-light/10 border border-brand-light rounded-2xl">
-        <h4 className="font-bold mb-2">Por que investir nessas subpáginas?</h4>
-        <p className="text-sm text-gray-400 leading-relaxed">
+        <h4 className="font-bold mb-2 text-[var(--text-primary)]">Por que investir nessas subpáginas?</h4>
+        <p className="text-sm text-[var(--text-muted)] leading-relaxed">
           Páginas focadas em um único objetivo (Dia dos Namorados ou Entrada no VIP) eliminam as distrações do site principal. 
           Ao oferecer um "Guia" ou uma "Experiência Exclusiva", aumentamos o valor percebido pelo cliente antes mesmo dele 
           clicar no botão do WhatsApp, o que resulta em leads muito mais qualificados para os seus vendedores.

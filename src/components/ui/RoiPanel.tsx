@@ -1,18 +1,29 @@
-import React from 'react';
-import { StoreDataV2 } from '../types';
-import { calcRoi, formatBRL, FEE_MENSAL } from '../utils';
-import { TrendingUp, TrendingDown, DollarSign, Wallet, Target, Info } from 'lucide-react';
+import { StoreData } from '../../types';
+import { calcRoi, formatBRL } from '../../utils';
+import { TrendingUp, DollarSign, Wallet, Target, Info, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface RoiPanelProps {
-  store: StoreDataV2;
+  store: StoreData;
+  fee: number;
 }
 
-export function RoiPanel({ store }: RoiPanelProps) {
-  const roiData = calcRoi(store);
+export function RoiPanel({ store, fee }: RoiPanelProps) {
+  const roiData = calcRoi(store, fee);
 
   return (
     <div className="space-y-6">
+      {/* ── ALERTA DE DADOS ────────────────────────────────────────────── */}
+      {!roiData.temVerba && (
+        <div className="flex gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs leading-relaxed text-amber-200">
+          <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
+          <div>
+            <strong>Atenção:</strong> Esta loja não possui dados de investimento em mídia (verba) registrados. 
+            O custo total está considerando apenas a taxa de gestão (Fee).
+          </div>
+        </div>
+      )}
+
       {/* ── RESUMO GERAL ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
@@ -46,7 +57,7 @@ export function RoiPanel({ store }: RoiPanelProps) {
       <div className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-white/5 text-[10px] uppercase tracking-wider text-gray-400">
+            <tr className="bg-white/5 text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
               <th className="px-4 py-3 font-medium">Mês</th>
               <th className="px-4 py-3 font-medium text-right">Vendas</th>
               <th className="px-4 py-3 font-medium text-right">Custo Total</th>
@@ -57,11 +68,11 @@ export function RoiPanel({ store }: RoiPanelProps) {
           <tbody className="divide-y divide-white/5">
             {roiData.meses.map((m, idx) => (
               <tr key={idx} className="hover:bg-white/5 transition-colors group">
-                <td className="px-4 py-3 font-medium text-gray-200">{m.mesLabel}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-gray-300">
+                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{m.mesLabel}</td>
+                <td className="px-4 py-3 text-right tabular-nums text-[var(--text-secondary)]">
                   {formatBRL(m.vendas)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-gray-400 group-hover:text-gray-300 transition-colors">
+                <td className="px-4 py-3 text-right tabular-nums text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
                    <span className="text-[10px] opacity-70">
                      ({formatBRL(m.fee)} + {formatBRL(m.verba)})
                    </span>
@@ -85,7 +96,7 @@ export function RoiPanel({ store }: RoiPanelProps) {
       <div className="flex gap-3 p-4 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs leading-relaxed text-violet-200">
         <Info className="w-5 h-5 shrink-0 text-violet-400" />
         <div>
-          O <strong>Custo Total</strong> é a soma da taxa mensal de gestão (FEE) de {formatBRL(FEE_MENSAL)} + o investimento realizado em mídia (Verba) no mês correspondente. 
+          O <strong>Custo Total</strong> é a soma da taxa mensal de gestão (FEE) de {formatBRL(fee)} + o investimento realizado em mídia (Verba) no mês correspondente. 
           O ROI é calculado subtraindo o custo total das vendas atribuídas ao canal.
         </div>
       </div>
@@ -101,16 +112,16 @@ function StatCard({ label, value, sub, icon: Icon, trend }: any) {
       className="bg-brand-medium border border-brand-light p-4 rounded-xl space-y-2 group"
     >
       <div className="flex justify-between items-start">
-        <span className="text-xs text-gray-400 font-medium">{label}</span>
+        <span className="text-xs text-[var(--text-secondary)] font-medium">{label}</span>
         <div className="p-2 bg-white/5 rounded-lg group-hover:bg-brand-light transition-colors">
           <Icon className="w-4 h-4 text-brand-accent" />
         </div>
       </div>
       <div className="flex flex-col">
-        <span className={`text-xl font-bold ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-rose-400' : 'text-gray-100'}`}>
+        <span className={`text-xl font-bold ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-rose-400' : 'text-[var(--text-primary)]'}`}>
           {value}
         </span>
-        <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{sub}</span>
+        <span className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider">{sub}</span>
       </div>
     </motion.div>
   );

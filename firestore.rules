@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'admin';
+    }
+
+    function isMemberOfGroup(groupId) {
+      return isSignedIn() && (getUserData().groupId == groupId || isAdmin());
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Rules ---
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && 
+                      incoming().keys().hasAll(['uid', 'email', 'name', 'role']) &&
+                      incoming().role in ['admin', 'client'] &&
+                      (incoming().role == 'admin' ? incoming().email == 'guilhermfroes@auredigital.com.br' : true);
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && 
+                      incoming().role == existing().role; // Cannot change role
+    }
+
+    // Action Plans
+    match /groups/{groupId}/plans/{planId} {
+      allow read: if isMemberOfGroup(groupId);
+      
+      allow create, update: if isMemberOfGroup(groupId) && isAdmin(); // Only admins can create/generate
+      
+      // Allow clients to toggle manual tasks
+      allow update: if isMemberOfGroup(groupId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['manualTasks', 'updatedAt']) &&
+                      incoming().manualTasks.size() <= 50; 
+    }
+  }
+}

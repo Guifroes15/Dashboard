@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { calcHealthScore } from '../utils';
-import { StoreDataV2 } from '../types';
+import { calcHealthScore } from '../../utils';
+import { StoreData } from '../../types';
 import { Info } from 'lucide-react';
 
 interface Props {
-  store: StoreDataV2;
+  store: StoreData;
   showDetails?: boolean;
 }
 
@@ -68,7 +68,7 @@ export function HealthBadge({ store, showDetails = false }: Props) {
 }
 
 // Versão compacta para tabelas/listas
-export function HealthDot({ store }: { store: StoreDataV2 }) {
+export function HealthDot({ store }: { store: StoreData }) {
   const health = calcHealthScore(store);
   return (
     <span

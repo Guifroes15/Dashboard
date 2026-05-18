@@ -5,15 +5,44 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-dark: #070709;
-  --color-brand-medium: #0e0e12;
-  --color-brand-light: #14141a;
+  --color-brand-dark: var(--bg-primary);
+  --color-brand-medium: var(--bg-secondary);
+  --color-brand-light: var(--bg-tertiary);
   --color-brand-purple: #7c3aed;
   --color-brand-purple-light: #a78bfa;
 }
 
-@layer base {
-  body {
-    @apply bg-brand-dark text-white font-sans antialiased;
+:root {
+  --bg-primary: #070709;
+  --bg-secondary: #0e0e12;
+  --bg-tertiary: #14141a;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --border-primary: #14141a;
+  --accent-primary: #7c3aed;
+}
+
+.light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-primary: #e2e8f0;
+  --accent-primary: #7c3aed;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .mask-fade-right {
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
 }

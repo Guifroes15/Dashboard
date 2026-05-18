@@ -1,3 +1,20 @@
+export type UserRole = 'admin' | 'client';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  role: UserRole;
+  groupId?: string; // Only for clients
+  name: string;
+}
+
+export const GROUPS_CONFIG = [
+  { id: 'yamcol', name: 'Grupo YAMCOL', color: '#7C3AED' },
+  { id: 'barbosa', name: 'Grupo Barbosa', color: '#3B82F6' },
+  { id: 'paralelas', name: 'Grupo Paralelas', color: '#10B981' },
+  { id: 'lupo', name: 'Grupo Lupo', color: '#EF4444' },
+];
+
 export interface MonthData {
   mes: string;
   chave: string;
@@ -8,15 +25,48 @@ export interface MonthData {
   qtdVendas: number;
   ticketMedio: number;
   pctAureFat: number;
-  verba: number; // investimento em mídia naquele mês
+  verba: number;
 }
 
-export interface StoreDataV2 {
+export interface PlanItem {
+  tarefa: string;
+  status: 'Alta' | 'Média' | 'Baixa' | 'Sucesso' | 'Teste';
+}
+
+export interface StoreData {
   id: string;
   name: string;
   color: string;
   historico: MonthData[];
-  planos: { tarefa: string; status: 'Alta' | 'Média' | 'Baixa' | 'Sucesso' | 'Teste' }[];
+  planos: PlanItem[];
+}
+
+export interface GroupData {
+  id: string;
+  name: string;
+  color: string;
+  fee: number;
+  stores: StoreData[];
+}
+
+export interface SimuladorInput {
+  verbaPlanning: number;
+  mensagensPlanning: number;
+}
+
+export interface SimuladorResult {
+  pessimista: number;
+  base: number;
+  otimista: number;
+  custoTotal: number;
+  roiPessimista: number;
+  roiBase: number;
+  roiOtimista: number;
+  convMediaHist: number;
+  ticketMedioHist: number;
+  rPerMsgHist: number;
+  mesesUsados: number;
+  metodo: 'conv+ticket' | 'r-por-msg' | 'media-historica';
 }
 
 export interface IdeaItem {

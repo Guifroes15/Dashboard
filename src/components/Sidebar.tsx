@@ -1,113 +1,176 @@
-import React from 'react';
-import { LayoutDashboard, Store, Lightbulb, TrendingUp, BarChart2, X } from 'lucide-react';
-import { StoreDataV2 } from '../types';
-import { HealthDot } from './HealthBadge';
+import React, { useState } from 'react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare } from 'lucide-react';
+import { GroupData } from '../types';
+import { ActiveView } from '../App';
 
-interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  stores: StoreDataV2[];
-  isOpen: boolean;
-  onClose: () => void;
+interface Props {
+  groups: GroupData[];
+  activeGroupId: string;
+  activeView: ActiveView;
+  isAdmin: boolean;
+  onGroupChange: (id: string) => void;
+  onViewChange: (view: ActiveView) => void;
+  onLogout?: () => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, stores, isOpen, onClose }: SidebarProps) {
-  const navItem = (id: string, label: string, Icon: React.ElementType, dot?: React.ReactNode) => (
-    <li key={id}>
+export function Sidebar({ groups, activeGroupId, activeView, isAdmin, onGroupChange, onViewChange, onLogout }: Props) {
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([activeGroupId]));
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const isActiveView = (view: ActiveView) => {
+    if (activeView.type !== view.type) return false;
+    if (view.type === 'store' && activeView.type === 'store')
+      return activeView.storeId === view.storeId;
+    return true;
+  };
+
+  const navBtn = (label: string, view: ActiveView, Icon: React.ElementType) => {
+    const active = isActiveView(view);
+    return (
       <button
-        onClick={() => {
-          setActiveTab(id);
-          onClose(); // Auto-close on mobile when item selected
-        }}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
-          activeTab === id
-            ? 'bg-brand-light text-brand-purple border-l-4 border-brand-purple'
-            : 'text-gray-400 hover:bg-brand-light hover:text-white'
+        onClick={() => onViewChange(view)}
+        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${
+          active
+            ? 'bg-brand-light text-[var(--text-primary)] border-l-2 -ml-px border-brand-purple'
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-brand-light/40'
         }`}
       >
-        <div className="flex items-center gap-3">
-          <Icon className="w-4 h-4 shrink-0" />
-          <span className="font-medium text-sm">{label}</span>
-        </div>
-        {dot}
+        <Icon className="w-3.5 h-3.5 shrink-0" />
+        <span className="font-medium">{label}</span>
       </button>
-    </li>
-  );
+    );
+  };
 
   return (
-    <>
-      {/* Overlay - Mobile Only */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+    <aside className="w-72 bg-brand-medium border-r border-brand-light p-5 flex flex-col fixed h-screen left-0 overflow-y-auto">
 
-      <aside
-        className={`fixed top-0 left-0 h-screen bg-brand-medium border-r border-brand-light p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 w-72 overflow-y-auto ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {/* Header Mobile Only */}
-        <div className="flex items-center justify-between mb-8 lg:block">
-          <div>
-            <div className="text-xl font-bold text-brand-purple flex items-center gap-2">
-              <TrendingUp className="w-6 h-6" />
-              <span>Aure Digital</span>
+      {/* Logo */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-7 h-7 bg-brand-purple/20 border border-brand-purple/30 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-brand-purple" />
             </div>
-            <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-1">
-              Grupo Yamcol
-            </div>
+            <span className="text-base font-bold text-white">Aure Digital</span>
           </div>
+          <p className="text-[9px] text-gray-700 font-bold uppercase tracking-widest pl-9">Painel de Controle</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-4">
+
+        {/* Home */}
+        <div>
           <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white lg:hidden"
+            onClick={() => onViewChange({ type: 'home' })}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left ${
+              activeView.type === 'home'
+                ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+            }`}
           >
-            <X className="w-6 h-6" />
+            <Home className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-bold">Início</span>
           </button>
         </div>
 
-        <nav className="flex-1">
-          <ul className="space-y-1">
-            {/* Visão */}
-            <div className="pt-1 pb-2 text-[9px] font-bold text-gray-700 uppercase tracking-[0.2em] px-4">
-              Visão geral
-            </div>
-            {navItem('consolidado', 'Consolidado', LayoutDashboard)}
-            {navItem('ranking', 'Msgs vs. Conversão', BarChart2)}
+        {/* Grupos */}
+        <div>
+          <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">
+            {isAdmin ? 'Grupos' : 'Sua Operação'}
+          </p>
+          {groups.map(group => {
+            const isActiveGroup = activeGroupId === group.id && activeView.type !== 'home';
+            const isExpanded = expandedGroups.has(group.id);
+            const hasStores = group.stores.length > 0;
 
-            {/* Lojas */}
-            <div className="pt-5 pb-2 text-[9px] font-bold text-gray-700 uppercase tracking-[0.2em] px-4">
-              Lojas ({stores.length})
-            </div>
-            {stores.map(store =>
-              navItem(
-                store.id,
-                store.name,
-                Store,
-                <HealthDot store={store} />,
-              )
-            )}
+            return (
+              <div key={group.id} className="mb-0.5">
+                <div
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all group ${
+                    isActiveGroup ? 'bg-brand-light' : 'hover:bg-brand-light/50'
+                  }`}
+                >
+                  <button
+                    onClick={() => {
+                      onGroupChange(group.id);
+                      if (!isExpanded) toggleGroup(group.id);
+                    }}
+                    className="flex-1 flex items-center gap-2.5 text-left min-w-0"
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: group.color }} />
+                    <span className={`flex-1 text-sm font-bold truncate ${isActiveGroup ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                      {group.name}
+                    </span>
+                    {hasStores && isAdmin && <span className="text-[9px] text-gray-600 mr-1">{group.stores.length}</span>}
+                  </button>
+                  <button 
+                    onClick={e => { e.stopPropagation(); toggleGroup(group.id); }} 
+                    className="p-0.5 rounded hover:bg-brand-light text-gray-600 hover:text-gray-300 transition-colors"
+                    aria-label={isExpanded ? "Contrair" : "Expandir"}
+                  >
+                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
 
-            {/* Inovações */}
-            <div className="pt-5 pb-2 text-[9px] font-bold text-gray-700 uppercase tracking-[0.2em] px-4">
-              Inovações
-            </div>
-            {navItem('ideas', 'Novas Páginas', Lightbulb)}
-          </ul>
-        </nav>
+                {isExpanded && (isActiveGroup || !isAdmin) && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-brand-light pl-3">
+                    {navBtn('Consolidado', { type: 'consolidado' }, LayoutDashboard)}
+                    {hasStores && isAdmin && navBtn('Msgs vs. Conversão', { type: 'ranking' }, BarChart2)}
+                    {hasStores && isAdmin && navBtn('Feedbacks', { type: 'feedback' }, MessageSquare)}
 
-        {/* Footer */}
-        <div className="mt-auto pt-6 border-t border-brand-light">
-          <div className="flex items-center gap-2 px-2 opacity-50">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
-              Sistema Ativo
-            </span>
-          </div>
+                    {hasStores && (
+                      <p className="text-[8px] font-bold text-gray-700 uppercase tracking-widest px-2.5 pt-2 pb-1">Lojas</p>
+                    )}
+
+                    {group.stores.map(store => {
+                      const active = isActiveView({ type: 'store', storeId: store.id });
+                      return (
+                        <button
+                          key={store.id}
+                          onClick={() => onViewChange({ type: 'store', storeId: store.id })}
+                          className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all text-left ${
+                            active ? 'bg-brand-light text-[var(--text-primary)] border-l-2 -ml-px' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-brand-light/40'
+                          }`}
+                          style={active ? { borderLeftColor: store.color } : {}}
+                        >
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: store.color }} />
+                          <span className="font-medium truncate">{store.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      </aside>
-    </>
+      </nav>
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 border-t border-brand-light space-y-4">
+        {onLogout && (
+          <button 
+            onClick={onLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/5 transition-all text-xs font-bold uppercase tracking-widest"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair do Sistema
+          </button>
+        )}
+
+        <div className="flex items-center gap-2 px-3 py-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-700">Conexão Segura</span>
+        </div>
+      </div>
+    </aside>
   );
 }

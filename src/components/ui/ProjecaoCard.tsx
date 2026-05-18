@@ -1,10 +1,10 @@
 import React from 'react';
-import { calcProjecao, formatBRL } from '../utils';
-import { StoreDataV2 } from '../types';
+import { calcProjecao, formatBRL } from '../../utils';
+import { StoreData } from '../../types';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface Props {
-  store: StoreDataV2;
+  store: StoreData;
 }
 
 export function ProjecaoCard({ store }: Props) {
@@ -35,10 +35,10 @@ export function ProjecaoCard({ store }: Props) {
     <div className="bg-brand-medium border border-brand-light rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest mb-1">
             Projeção — {proj.label}
           </p>
-          <p className="text-2xl font-bold text-white">{formatBRL(proj.valor)}</p>
+          <p className="text-2xl font-bold text-[var(--text-primary)]">{formatBRL(proj.valor)}</p>
         </div>
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -58,7 +58,7 @@ export function ProjecaoCard({ store }: Props) {
         </span>
       </div>
 
-      <p className="text-[10px] text-gray-600 uppercase tracking-wider">
+      <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
         Média ponderada dos últimos {proj.baseadoEm} meses com vendas
       </p>
     </div>
