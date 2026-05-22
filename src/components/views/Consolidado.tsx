@@ -26,6 +26,29 @@ const LABELS: Record<string, string> = {
   '2026-01':'Jan/26','2026-02':'Fev/26','2026-03':'Mar/26','2026-04':'Abr/26','2026-05':'Mai/26',
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 150,
+      damping: 18,
+    },
+  },
+};
+
 export function ConsolidadoView({ group, onStoreClick }: Props) {
   const { stores } = group;
 
@@ -88,8 +111,13 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
   const hasConversao = stores.some(s => s.historico.some(m => m.conversao > 0));
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
+      <motion.header variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.3)]" style={{ background: group.color }} />
@@ -109,7 +137,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
           <Calendar className="w-3.5 h-3.5" />
           {showFilter ? 'Ocultar Filtros' : 'Filtrar Período'}
         </button>
-      </header>
+      </motion.header>
 
       {/* Filtro de meses */}
       <AnimatePresence>
@@ -118,7 +146,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mb-6"
+            className="overflow-hidden mb-2"
           >
             <div className="bg-brand-medium border border-brand-light rounded-2xl px-5 py-4">
               <MonthFilter
@@ -134,51 +162,63 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
 
       {/* Aviso filtro ativo */}
       {selectedMonths.size < presentChaves.length && (
-        <div className="mb-4 px-3 py-2 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
+        <motion.div variants={itemVariants} className="px-3 py-2 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
           <p className="text-[10px] text-brand-purple2">Exibindo {selectedMonths.size} de {presentChaves.length} meses</p>
           <button onClick={() => setSelectedMonths(new Set(presentChaves))} className="text-[10px] text-brand-purple2 underline">Ver todos</button>
-        </div>
+        </motion.div>
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Faturamento Geral" value={formatBRL(totalFaturamentoGeral)} icon={DollarSign} />
-        <StatCard label="Venda Tráfego" value={formatBRL(totalVendasTrafego)} icon={TrendingUp} />
-        <StatCard label="Melhor Loja" value={melhorLoja ? formatBRL(ultimoMes(melhorLoja).vendas) : '—'} subtext={melhorLoja?.name} icon={Store} />
-        <StatCard label="Lojas c/ ROI +" value={`${lojasPosRoi} / ${stores.length}`} subtext="no período selecionado" icon={Percent} />
-      </div>
+      <motion.div variants={containerVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <motion.div variants={itemVariants}>
+          <StatCard label="Faturamento Geral" value={formatBRL(totalFaturamentoGeral)} icon={DollarSign} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard label="Venda Tráfego" value={formatBRL(totalVendasTrafego)} icon={TrendingUp} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard label="Melhor Loja" value={melhorLoja ? formatBRL(ultimoMes(melhorLoja).vendas) : '—'} subtext={melhorLoja?.name} icon={Store} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard label="Lojas c/ ROI +" value={`${lojasPosRoi} / ${stores.length}`} subtext="no período selecionado" icon={Percent} />
+        </motion.div>
+      </motion.div>
 
       {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <ChartCard title="Evolução consolidada (R$)" subtitle={`Soma de todas as lojas · ${selectedMonths.size} meses selecionados`}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={evolucaoData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} dy={6} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-              <Tooltip content={<ChartTooltip />} />
-              <Line type="monotone" dataKey="total" name="Vendas" stroke={group.color} strokeWidth={2.5} dot={{ r: 3, fill: group.color }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
+      <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div variants={itemVariants}>
+          <ChartCard title="Evolução consolidada (R$)" subtitle={`Soma de todas as lojas · ${selectedMonths.size} meses selecionados`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={evolucaoData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} dy={6} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
+                <Tooltip content={<ChartTooltip />} />
+                <Line type="monotone" dataKey="total" name="Vendas" stroke={group.color} strokeWidth={2.5} dot={{ r: 3, fill: group.color }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </motion.div>
 
-        <ChartCard title="Ranking — último mês (R$)" subtitle="Independente do filtro">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rankingData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" horizontal={false} />
-              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-              <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} width={80} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="vendas" name="Vendas" radius={[0, 4, 4, 0]}>
-                {rankingData.map((d, i) => <Cell key={i} fill={d.color} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+        <motion.div variants={itemVariants}>
+          <ChartCard title="Ranking — último mês (R$)" subtitle="Independente do filtro">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rankingData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" horizontal={false} />
+                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
+                <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} width={80} />
+                <Tooltip content={<ChartTooltip />} />
+                <Bar dataKey="vendas" name="Vendas" radius={[0, 4, 4, 0]}>
+                  {rankingData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </motion.div>
+      </motion.div>
 
       {/* Tabela de lojas */}
-      <div className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden">
+      <motion.div variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden">
         <div className="p-4 border-b border-brand-light flex items-center justify-between">
           <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Resumo por loja</h3>
           {selectedMonths.size < presentChaves.length && (
@@ -262,7 +302,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

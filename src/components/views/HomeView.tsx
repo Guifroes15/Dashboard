@@ -2,12 +2,36 @@ import React from 'react';
 import { GroupData } from '../../types';
 import { ActiveView } from '../../App';
 import { Lightbulb, Target, TrendingUp, MessageSquare, Zap, Crown } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface Props {
   groups: GroupData[];
   onNavigate: (view: ActiveView, groupId: string) => void;
   isMaster?: boolean;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 150,
+      damping: 18,
+    },
+  },
+};
 
 export function HomeView({ groups, onNavigate, isMaster = false }: Props) {
   const thoughts = [
@@ -18,19 +42,25 @@ export function HomeView({ groups, onNavigate, isMaster = false }: Props) {
   ];
 
   return (
-    <div id="home-view-container" className="min-h-[85vh] flex flex-col items-center justify-center animate-in fade-in duration-700">
-      <div className="text-center mb-12">
+    <motion.div 
+      id="home-view-container" 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="min-h-[85vh] flex flex-col items-center justify-center py-6"
+    >
+      <motion.div variants={itemVariants} className="text-center mb-12">
         <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white uppercase italic leading-tight select-none">
           Seja um eterno <br />
           <span className="text-brand-purple">inconformado.</span>
         </h1>
-      </div>
+      </motion.div>
 
       {/* Ferramentas Inteligentes */}
       {isMaster && (
-        <div className="max-w-4xl w-full px-4 mb-10 animate-in fade-in slide-in-from-bottom-3 duration-500">
+        <motion.div variants={itemVariants} className="max-w-4xl w-full px-4 mb-10">
           <h2 className="text-[10px] font-bold text-brand-purple uppercase tracking-[0.2em] mb-4">Ferramentas de IA & Copy</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               {
                 id: 'launcher-ia-atendimento',
@@ -57,11 +87,13 @@ export function HomeView({ groups, onNavigate, isMaster = false }: Props) {
                 badge: 'VIP'
               }
             ].map(tool => (
-              <button
+              <motion.button
                 key={tool.title}
                 id={tool.id}
+                variants={itemVariants}
+                whileHover={{ y: -3, transition: { duration: 0.15 } }}
                 onClick={() => onNavigate(tool.view, groups[0]?.id || '')}
-                className="text-left p-5 bg-brand-medium border border-brand-light rounded-2xl hover:border-brand-purple/50 active:scale-[0.98] transition-all cursor-pointer group flex flex-col justify-between h-44 shadow-lg"
+                className="text-left p-5 bg-brand-medium border border-brand-light rounded-2xl hover:border-brand-purple/50 active:scale-[0.98] transition-all cursor-pointer group flex flex-col justify-between h-44 shadow-lg w-full"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -75,20 +107,22 @@ export function HomeView({ groups, onNavigate, isMaster = false }: Props) {
                   <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-brand-purple2 transition-colors">{tool.title}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">{tool.desc}</p>
                 </div>
-              </button>
+              </motion.button>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
-      <div className="max-w-4xl w-full px-4 mb-4">
-        <h2 className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-4">Dicas de Sucesso</h2>
-      </div>
+      <motion.div variants={itemVariants} className="max-w-4xl w-full px-4 mb-4">
+        <h2 className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">Dicas de Sucesso</h2>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full px-4">
+      <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl w-full px-4">
         {thoughts.map((t, i) => (
-          <div 
+          <motion.div 
             key={i} 
+            variants={itemVariants}
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
             className="group p-5 bg-brand-medium border border-brand-light rounded-2xl hover:border-brand-purple/50 transition-all cursor-default"
           >
             <div className="flex items-start gap-4">
@@ -99,9 +133,9 @@ export function HomeView({ groups, onNavigate, isMaster = false }: Props) {
                 {t.text}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

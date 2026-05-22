@@ -16,6 +16,29 @@ import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 interface Props { store: StoreData; fee: number }
 type Tab = 'visao' | 'simulador';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 150,
+      damping: 18,
+    },
+  },
+};
+
 export function StoreDetailView({ store, fee }: Props) {
   const [tab, setTab] = useState<Tab>('visao');
   const [showFilter, setShowFilter] = useState(false);
@@ -76,10 +99,15 @@ export function StoreDetailView({ store, fee }: Props) {
   const storeFiltered: StoreData = { ...store, historico: filtered };
 
   return (
-    <div className="animate-in slide-in-from-bottom-4 duration-500">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-5"
+    >
 
       {/* Header */}
-      <header className="mb-5">
+      <motion.header variants={itemVariants} className="mb-5">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
             <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight mb-1" style={{ color: store.color }}>
@@ -117,7 +145,7 @@ export function StoreDetailView({ store, fee }: Props) {
             </div>
             <div className="space-y-1">
               <p className="text-[9px] font-bold text-red-500 uppercase">Crítico (&lt; 30 pts)</p>
-              <p className="text-[9px] text-[var(--text-secondary)] leading-snug">Mesmo que dê lucro (ROI+), a loja apresenta queda real de vendas ou conversão muito baixa.</p>
+              <p className="text-[9px] text-[var(--text-secondary)] leading-snug">Mesmo que deu lucro (ROI+), a loja apresenta queda real de vendas ou conversão muito baixa.</p>
             </div>
           </div>
         </div>
@@ -129,10 +157,10 @@ export function StoreDetailView({ store, fee }: Props) {
             <p className="text-[9px] text-gray-600">{roi.mesesPositivos}/{roi.meses.length} meses</p>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-5">
+      <motion.div variants={itemVariants} className="flex gap-2 mb-5">
         <div className="flex-1 flex gap-1 bg-brand-medium border border-brand-light rounded-xl p-1">
           <button onClick={() => setTab('visao')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'visao' ? 'bg-brand-light text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
             <BarChart2 className="w-3.5 h-3.5" />Resultados
@@ -155,11 +183,16 @@ export function StoreDetailView({ store, fee }: Props) {
             {showFilter ? 'Ocultar' : 'Filtrar'}
           </button>
         )}
-      </div>
+      </motion.div>
 
       {/* ── ABA RESULTADOS ── */}
       {tab === 'visao' && (
-        <>
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-5 w-full"
+        >
           {/* Filtro de meses */}
           <AnimatePresence>
             {showFilter && (
@@ -183,75 +216,89 @@ export function StoreDetailView({ store, fee }: Props) {
 
           {/* Aviso de filtro ativo */}
           {selectedMonths.size < allChaves.length && (
-            <div className="mb-4 px-3 py-2 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
+            <motion.div variants={itemVariants} className="px-3 py-2 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
               <p className="text-[10px] text-brand-purple2">
                 Exibindo {selectedMonths.size} de {allChaves.length} meses
               </p>
               <button onClick={() => setSelectedMonths(new Set(allChaves))} className="text-[10px] text-brand-purple2 underline">
                 Ver todos
               </button>
-            </div>
+            </motion.div>
           )}
 
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            <StatCard label="Faturamento Total" value={ultimo.faturamentoLoja > 0 ? formatBRL(ultimo.faturamentoLoja) : '—'} subtext={ultimo.mes} icon={DollarSign} />
-            <StatCard label="Venda Tráfego" value={formatBRL(ultimo.vendas)} change={change(ultimo.vendas, penultimo?.vendas ?? null)} icon={TrendingUp} />
-            {hasConversao
-              ? <StatCard label={`Conversão (${ultimo.mes})`} value={`${ultimo.conversao.toFixed(1)}%`} change={change(ultimo.conversao, penultimo?.conversao ?? null)} icon={Percent} />
-              : <StatCard label="Meses ROI +" value={`${roiFiltered.mesesPositivos} / ${roiFiltered.meses.length}`} subtext="no período" icon={Percent} />
-            }
-            {hasMensagens
-              ? <StatCard label="Contatos" value={ultimo.mensagens} subtext={`Ticket: ${formatBRL(ultimo.ticketMedio)}`} icon={MessageSquare} />
-              : <StatCard label="ROI Período" value={formatBRL(roiFiltered.roiTotal)} subtext={roiFiltered.status === 'positivo' ? 'Positivo ✓' : 'Negativo'} icon={MessageSquare} />
-            }
-          </div>
+          <motion.div variants={containerVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <motion.div variants={itemVariants}>
+              <StatCard label="Faturamento Total" value={ultimo.faturamentoLoja > 0 ? formatBRL(ultimo.faturamentoLoja) : '—'} subtext={ultimo.mes} icon={DollarSign} />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <StatCard label="Venda Tráfego" value={formatBRL(ultimo.vendas)} change={change(ultimo.vendas, penultimo?.vendas ?? null)} icon={TrendingUp} />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              {hasConversao
+                ? <StatCard label={`Conversão (${ultimo.mes})`} value={`${ultimo.conversao.toFixed(1)}%`} change={change(ultimo.conversao, penultimo?.conversao ?? null)} icon={Percent} />
+                : <StatCard label="Meses ROI +" value={`${roiFiltered.mesesPositivos} / ${roiFiltered.meses.length}`} subtext="no período" icon={Percent} />
+              }
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              {hasMensagens
+                ? <StatCard label="Contatos" value={ultimo.mensagens} subtext={`Ticket: ${formatBRL(ultimo.ticketMedio)}`} icon={MessageSquare} />
+                : <StatCard label="ROI Período" value={formatBRL(roiFiltered.roiTotal)} subtext={roiFiltered.status === 'positivo' ? 'Positivo ✓' : 'Negativo'} icon={MessageSquare} />
+              }
+            </motion.div>
+          </motion.div>
 
           {/* Gráficos */}
-          <div className={`grid grid-cols-1 ${hasConversao ? 'lg:grid-cols-2' : ''} gap-4 mb-5`}>
-            <ChartCard title="Evolução de vendas (R$)">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id={`g-${store.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={store.color} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={store.color} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} dy={6} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area type="monotone" dataKey="vendas" name="Vendas (R$)" stroke={store.color} strokeWidth={2} fill={`url(#g-${store.id})`} dot={{ r: 3, fill: store.color }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            {hasConversao && (
-              <ChartCard title="Conversão mensal (%)">
+          <motion.div variants={containerVariants} className={`grid grid-cols-1 ${hasConversao ? 'lg:grid-cols-2' : ''} gap-4`}>
+            <motion.div variants={itemVariants}>
+              <ChartCard title="Evolução de vendas (R$)">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={`g-${store.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor={store.color} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={store.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} dy={6} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
                     <Tooltip content={<ChartTooltip />} />
-                    <Bar dataKey="conversao" name="Conversão (%)" fill={store.color} radius={[4, 4, 0, 0]} />
-                  </BarChart>
+                    <Area type="monotone" dataKey="vendas" name="Vendas (R$)" stroke={store.color} strokeWidth={2} fill={`url(#g-${store.id})`} dot={{ r: 3, fill: store.color }} />
+                  </AreaChart>
                 </ResponsiveContainer>
               </ChartCard>
+            </motion.div>
+
+            {hasConversao && (
+              <motion.div variants={itemVariants}>
+                <ChartCard title="Conversão mensal (%)">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} dy={6} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                      <Tooltip content={<ChartTooltip />} />
+                      <Bar dataKey="conversao" name="Conversão (%)" fill={store.color} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
 
           {/* Projeção + ROI */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-            <ProjecaoCard store={store} />
-            <div className="lg:col-span-2">
+          <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <motion.div variants={itemVariants}>
+              <ProjecaoCard store={store} />
+            </motion.div>
+            <motion.div variants={itemVariants} className="lg:col-span-2">
               <RoiPanel store={storeFiltered} fee={fee} />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Histórico filtrado */}
-          <div className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden">
+          <motion.div variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden">
             <div className="p-4 border-b border-brand-light flex items-center justify-between">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Histórico</h3>
               {selectedMonths.size < allChaves.length && (
@@ -296,12 +343,12 @@ export function StoreDetailView({ store, fee }: Props) {
                 </tbody>
               </table>
             </div>
-          </div>
-        </>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* ── ABA SIMULADOR ── */}
       {tab === 'simulador' && <SimuladorView store={store} fee={fee} />}
-    </div>
+    </motion.div>
   );
 }
