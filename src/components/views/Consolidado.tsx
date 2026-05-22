@@ -64,7 +64,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
     return ub.vendas - ua.vendas;
   })[0];
   const lojasPosRoi = filteredStores.filter(s => {
-    const r = calcRoi(s, group.fee);
+    const r = calcRoi(s, s.fee ?? group.fee);
     return r.roiTotal > 0;
   }).length;
 
@@ -192,7 +192,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
         <div className="block lg:hidden divide-y divide-brand-light">
             {filteredStores.map((store, idx) => {
             const u = ultimoMes(stores[idx]);
-            const r = calcRoi(store, group.fee);
+            const r = calcRoi(store, store.fee ?? group.fee);
             const acum = store.historico.reduce((a, m) => a + m.vendas, 0);
             return (
               <button key={store.id} onClick={() => onStoreClick(store.id)}
@@ -235,7 +235,7 @@ export function ConsolidadoView({ group, onStoreClick }: Props) {
             <tbody className="divide-y divide-brand-light">
               {filteredStores.map((store, idx) => {
                 const u  = ultimoMes(stores[idx]);
-                const r  = calcRoi(store, group.fee);
+                const r  = calcRoi(store, store.fee ?? group.fee);
                 const fatAcum = store.historico.reduce((a, m) => a + m.faturamentoLoja, 0);
                 const vendAcum = store.historico.reduce((a, m) => a + m.vendas, 0);
                 const convOuFat = hasConversao

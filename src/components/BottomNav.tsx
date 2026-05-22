@@ -9,12 +9,12 @@ interface Props {
   groups: GroupData[];
   activeGroupId: string;
   activeView: ActiveView;
-  isAdmin: boolean;
+  isMaster: boolean;
   onGroupChange: (id: string) => void;
   onViewChange: (view: ActiveView) => void;
 }
 
-export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupChange, onViewChange }: Props) {
+export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroupChange, onViewChange }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'groups' | 'stores'>('groups');
 
@@ -51,10 +51,10 @@ export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupC
                   <div className="w-10 h-1 rounded-full bg-brand-light" />
                 </div>
                 <div className="flex items-center justify-between px-5 py-3 border-b border-brand-light">
-                  <p className="text-sm font-bold text-[var(--text-primary)]">
+                  <p className="text-sm font-bold text-white">
                     {drawerMode === 'groups' ? 'Selecionar grupo' : `${activeGroup.name} — Lojas`}
                   </p>
-                  <button onClick={close} className="p-1.5 rounded-lg bg-brand-light text-[var(--text-secondary)]">
+                  <button onClick={close} className="p-1.5 rounded-lg bg-brand-light text-gray-400">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -70,7 +70,7 @@ export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupC
                       }`}
                     >
                       <div className="w-3 h-3 rounded-full shrink-0" style={{ background: g.color }} />
-                      <span className={`flex-1 text-left text-sm font-semibold ${activeGroupId === g.id ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                      <span className={`flex-1 text-left text-sm font-semibold ${activeGroupId === g.id ? 'text-white' : 'text-gray-400'}`}>
                         {g.name}
                       </span>
                       <span className="text-[10px] text-gray-600">{g.stores.length} lojas</span>
@@ -88,11 +88,11 @@ export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupC
                       onClick={() => goView({ type: 'store', storeId: store.id })}
                       className={`w-full flex items-center gap-3 px-5 py-3.5 transition-colors text-left ${
                         activeView.type === 'store' && activeView.storeId === store.id
-                          ? 'bg-brand-light' : 'hover:bg-brand-light/50'
+                          ? 'bg-brand-light animate-pulse' : 'hover:bg-brand-light/50'
                       }`}
                     >
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: store.color }} />
-                      <span className="flex-1 text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{store.name}</span>
+                      <span className="flex-1 text-sm font-medium text-gray-400 hover:text-white transition-colors">{store.name}</span>
                     </button>
                   ))}
                 </div>
@@ -107,44 +107,49 @@ export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupC
         <div className="flex items-stretch h-16">
           <button
             onClick={() => goView({ type: 'home' })}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeView.type === 'home' ? 'text-brand-purple' : 'text-[var(--text-secondary)]'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${activeView.type === 'home' ? 'text-brand-purple' : 'text-gray-500'}`}
           >
             <Home className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-wider">Home</span>
           </button>
+          
           <button
             onClick={() => goView({ type: 'consolidado' })}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeView.type === 'consolidado' ? 'text-brand-purple' : 'text-[var(--text-secondary)]'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${activeView.type === 'consolidado' ? 'text-brand-purple' : 'text-gray-500'}`}
           >
             <LayoutDashboard className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-wider">Geral</span>
           </button>
 
-          {isAdmin && (
-            <>
-              <button
-                onClick={() => goView({ type: 'feedback' })}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeView.type === 'feedback' ? 'text-brand-purple' : 'text-[var(--text-secondary)]'}`}
-              >
-                <MessageSquare className="w-5 h-5" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">Dicas</span>
-              </button>
+          {isMaster && (
+            <button
+              onClick={() => goView({ type: 'atendimento' })}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
+                activeView.type === 'atendimento' || activeView.type === 'criativos' || activeView.type === 'vip'
+                  ? 'text-brand-purple'
+                  : 'text-gray-500'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[9px] font-bold uppercase tracking-wider">IA</span>
+            </button>
+          )}
 
-              <button
-                onClick={() => activeGroup.stores.length > 0 && goView({ type: 'ranking' })}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
-                  activeView.type === 'ranking' ? 'text-brand-purple' : activeGroup.stores.length === 0 ? 'text-[var(--text-muted)]' : 'text-[var(--text-secondary)]'
-                }`}
-              >
-                <BarChart2 className="w-5 h-5" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">Ranking</span>
-              </button>
-            </>
+          {isMaster && (
+            <button
+              onClick={() => activeGroup.stores.length > 0 && goView({ type: 'ranking' })}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors relative cursor-pointer ${
+                activeView.type === 'ranking' ? 'text-brand-purple' : activeGroup.stores.length === 0 ? 'text-gray-800' : 'text-gray-500'
+              }`}
+            >
+              <BarChart2 className="w-5 h-5" />
+              <span className="text-[9px] font-bold uppercase tracking-wider">Ranking</span>
+            </button>
           )}
 
           <button
             onClick={() => openDrawer('stores')}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors ${isStore ? 'text-brand-purple' : 'text-[var(--text-secondary)]'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors cursor-pointer ${isStore ? 'text-brand-purple' : 'text-gray-500'}`}
           >
             <Store className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-wider">Lojas</span>
@@ -155,10 +160,10 @@ export function BottomNav({ groups, activeGroupId, activeView, isAdmin, onGroupC
             )}
           </button>
 
-          {isAdmin && (
+          {isMaster && (
             <button
               onClick={() => openDrawer('groups')}
-              className="flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors text-gray-500 hover:text-white cursor-pointer"
             >
               <Layers className="w-5 h-5" />
               <span className="text-[9px] font-bold uppercase tracking-wider">Grupos</span>

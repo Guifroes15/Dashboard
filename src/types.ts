@@ -37,6 +37,7 @@ export interface StoreData {
   id: string;
   name: string;
   color: string;
+  fee?: number;
   historico: MonthData[];
   planos: PlanItem[];
 }

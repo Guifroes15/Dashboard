@@ -68,7 +68,7 @@ export function ActionPlanView({ group }: Props) {
     if (!group.stores.length) return;
     setIsGenerating(true);
     try {
-      const report = await generateActionPlan(group.stores[0], group.fee);
+      const report = await generateActionPlan(group.stores[0], group.stores[0].fee ?? group.fee);
       if (report) {
         setAiReport(report);
         await savePlan(report, manualTasks);
