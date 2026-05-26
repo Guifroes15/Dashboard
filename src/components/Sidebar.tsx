@@ -11,9 +11,21 @@ interface Props {
   onViewChange: (view: ActiveView) => void;
   onLogout?: () => void;
   isMaster?: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
-export function Sidebar({ groups, activeGroupId, activeView, onGroupChange, onViewChange, onLogout, isMaster = false }: Props) {
+export function Sidebar({ 
+  groups, 
+  activeGroupId, 
+  activeView, 
+  onGroupChange, 
+  onViewChange, 
+  onLogout, 
+  isMaster = false,
+  theme,
+  onToggleTheme
+}: Props) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([activeGroupId]));
 
   const toggleGroup = (id: string) => {
@@ -208,10 +220,27 @@ export function Sidebar({ groups, activeGroupId, activeView, onGroupChange, onVi
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto pt-4 border-t border-brand-light">
-        <div className="flex items-center gap-2 px-2 py-1 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
-          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-700">Sistema ativo</span>
+      <div className="mt-auto pt-4 border-t border-brand-light space-y-2">
+        <div className="flex items-center justify-between gap-2 px-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+            <span className="text-[9px] font-bold uppercase tracking-wider text-gray-700">Sistema ativo</span>
+          </div>
+          <button
+            onClick={onToggleTheme}
+            className="p-1 rounded bg-brand-light hover:bg-brand-light/90 border border-white/5 hover:border-brand-purple/40 text-gray-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0"
+            title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+          >
+            {theme === 'dark' ? (
+              <svg className="w-3.5 h-3.5 text-amber-500 hover:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5 text-indigo-600 hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
         </div>
         {onLogout && (
           <button

@@ -12,8 +12,14 @@ import { MonthFilter } from '../ui/MonthFilter';
 import { SimuladorView } from './SimuladorView';
 import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar } from 'lucide-react';
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
+import { useGestao } from '../../hooks/useGestao';
 
-interface Props { store: StoreData; fee: number }
+interface Props { 
+  store: StoreData; 
+  fee: number;
+  isMaster?: boolean;
+  groupId?: string;
+}
 type Tab = 'visao' | 'simulador';
 
 const containerVariants = {
@@ -39,9 +45,13 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee }: Props) {
+export function StoreDetailView({ store, fee, isMaster = false, groupId = '' }: Props) {
   const [tab, setTab] = useState<Tab>('visao');
   const [showFilter, setShowFilter] = useState(false);
+
+  const gestao = useGestao();
+  const storeGestate = gestao.getLoja(groupId, store.id, store.name);
+  const currentFeedback = storeGestate.feedback ?? '';
 
   // Filtro de meses
   const allChaves = store.historico.map(m => m.chave);
@@ -295,6 +305,50 @@ export function StoreDetailView({ store, fee }: Props) {
             <motion.div variants={itemVariants} className="lg:col-span-2">
               <RoiPanel store={storeFiltered} fee={fee} />
             </motion.div>
+          </motion.div>
+
+          {/* Feedback da Operação */}
+          <motion.div variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-xl p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-brand-purple" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Feedback da Operação</h3>
+              {!isMaster && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/15">
+                  Apenas leitura
+                </span>
+              )}
+            </div>
+
+            {isMaster ? (
+              <div className="space-y-2">
+                <textarea
+                  value={currentFeedback}
+                  onChange={e => gestao.updateFeedback(groupId, store.id, store.name, e.target.value)}
+                  placeholder="Escreva um feedback estratégico sobre a operação desta loja (ex: novos criativos em andamento, melhorias no atendimento da equipe, etc.)"
+                  className="w-full min-h-[100px] bg-brand-dark/50 border border-brand-light/70 rounded-xl p-3.5 text-xs text-gray-200 placeholder-gray-600 outline-none focus:border-brand-purple transition-all resize-y leading-relaxed"
+                />
+                <p className="text-[9px] text-gray-500 flex items-center justify-between">
+                  <span>Salvo automaticamente</span>
+                  <span className="font-semibold text-brand-purple/70">O cliente visualizará em modo de apenas leitura</span>
+                </p>
+              </div>
+            ) : (
+              <div className="bg-brand-dark/30 border border-white/5 rounded-xl p-4 min-h-[80px] flex flex-col justify-between">
+                {currentFeedback.trim() ? (
+                  <p className="text-xs text-gray-300 leading-relaxed italic whitespace-pre-wrap">
+                    "{currentFeedback}"
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-650 italic">
+                    Nenhum feedback operacional registrado para o período ainda.
+                  </p>
+                )}
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[9px] text-gray-500 font-bold uppercase tracking-wide">
+                  <span>Equipe Aure Digital</span>
+                  <span>Canal Oficial de Operação</span>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Histórico filtrado */}

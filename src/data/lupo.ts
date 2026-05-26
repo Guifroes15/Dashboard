@@ -4,7 +4,7 @@ export const LUPO: GroupData = {
   id: 'lupo',
   name: 'Grupo Lupo',
   color: '#ec4899',
-  fee: 1500,
+  fee: 1200,
   stores: [
 
     // ── LUPO CARREFOUR ────────────────────────────────────────────────────
@@ -13,10 +13,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Carrefour',
       color: '#ec4899',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:10496.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:8976.90,  faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:13377.60, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:7398.60,  faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:10496.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1005.93 },
+        { mes:'Fev/26', chave:'2026-02', vendas:8976.90,  faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1162.93 },
+        { mes:'Mar/26', chave:'2026-03', vendas:13377.60, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:873.75 },
+        { mes:'Abr/26', chave:'2026-04', vendas:7398.60,  faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:800.17 },
       ],
       planos: [
         { tarefa:'Melhor loja do grupo — R$40k em 4 meses', status:'Sucesso' },
@@ -32,10 +32,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Boa Vista',
       color: '#db2777',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:1468,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:1706,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:2700.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:2662.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:1468,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:897.14 },
+        { mes:'Fev/26', chave:'2026-02', vendas:1706,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1263.88 },
+        { mes:'Mar/26', chave:'2026-03', vendas:2700.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1069.82 },
+        { mes:'Abr/26', chave:'2026-04', vendas:2662.40, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:806.80 },
       ],
       planos: [
         { tarefa:'Crescimento consistente — replicar estratégia do Carrefour', status:'Alta' },
@@ -50,10 +50,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Ponta Negra',
       color: '#be185d',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:1942,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:2751.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:2050,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:6680.80, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:1942,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:350 },
+        { mes:'Fev/26', chave:'2026-02', vendas:2751.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:400 },
+        { mes:'Mar/26', chave:'2026-03', vendas:2050,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:350 },
+        { mes:'Abr/26', chave:'2026-04', vendas:6680.80, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:550 },
       ],
       planos: [
         { tarefa:'Abril explosivo (+226%) — entender o que causou e replicar', status:'Alta' },
@@ -68,10 +68,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Sumaúma',
       color: '#9d174d',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:1311,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:3051,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:843,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:200 },
+        { mes:'Fev/26', chave:'2026-02', vendas:1311,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
+        { mes:'Mar/26', chave:'2026-03', vendas:3051,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:400 },
+        { mes:'Abr/26', chave:'2026-04', vendas:843,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:250 },
       ],
       planos: [
         { tarefa:'Resultado inconsistente — revisar estratégia de disparos', status:'Alta' },
@@ -86,10 +86,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Manauara',
       color: '#f472b6',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:2085.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:6699,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:2168.50, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:2085.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
+        { mes:'Fev/26', chave:'2026-02', vendas:6699,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:450 },
+        { mes:'Mar/26', chave:'2026-03', vendas:2168.50, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
+        { mes:'Abr/26', chave:'2026-04', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:100 },
       ],
       planos: [
         { tarefa:'Fevereiro foi o pico — entender o que diferenciou aquele mês', status:'Alta' },
@@ -104,10 +104,10 @@ export const LUPO: GroupData = {
       name: 'Lupo São Caetano',
       color: '#f9a8d4',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:713.01 },
+        { mes:'Fev/26', chave:'2026-02', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1050.90 },
+        { mes:'Mar/26', chave:'2026-03', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:344.57 },
+        { mes:'Abr/26', chave:'2026-04', vendas:0, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:677.68 },
       ],
       planos: [
         { tarefa:'URGENTE: zero vendas em 4 meses — revisar completamente a estratégia', status:'Alta' },
@@ -123,13 +123,13 @@ export const LUPO: GroupData = {
       name: 'Lupo Sports',
       color: '#fce7f3',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Fev/26', chave:'2026-02', vendas:286,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Mar/26', chave:'2026-03', vendas:1056,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
-        { mes:'Abr/26', chave:'2026-04', vendas:266,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:0 },
+        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:598.83 },
+        { mes:'Fev/26', chave:'2026-02', vendas:286,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1200.09 },
+        { mes:'Mar/26', chave:'2026-03', vendas:1056,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:682.93 },
+        { mes:'Abr/26', chave:'2026-04', vendas:266,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:797.08 },
       ],
       planos: [
-        { tarefa:'Resultado muito baixo vs. fee R$1.500 — exige revisão urgente', status:'Alta' },
+        { tarefa:'Resultado muito baixo vs. fee R$1.200 — exige revisão urgente', status:'Alta' },
         { tarefa:'Verificar público-alvo e posicionamento da loja', status:'Alta' },
         { tarefa:'Testar abordagem diferente de produto nos disparos', status:'Alta' },
         { tarefa:'Avaliar continuidade se Maio não apresentar melhora', status:'Alta' },

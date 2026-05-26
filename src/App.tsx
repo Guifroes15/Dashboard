@@ -29,6 +29,16 @@ export default function App() {
   const [access, setAccess]           = useState<AccessState | null>(null);
   const [activeGroupId, setActiveGroupId] = useState('');
   const [activeView, setActiveView]   = useState<ActiveView>({ type: 'home' });
+  const [theme, setTheme]             = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('aure_theme') as 'dark' | 'light') ?? 'dark';
+  });
+
+  // Aplica tema globalmente no elemento html
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
 
   // Persiste sessão
   useEffect(() => {
@@ -37,6 +47,14 @@ export default function App() {
       try { setAccess(JSON.parse(saved)); } catch { sessionStorage.removeItem(SESSION_KEY); }
     }
   }, []);
+
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('aure_theme', next);
+      return next;
+    });
+  };
 
   const handleAccess = (state: AccessState) => {
     setAccess(state);
@@ -96,7 +114,7 @@ export default function App() {
   if (!activeGroup) return <AccessGate onAccess={handleAccess} />;
 
   return (
-    <div className="flex min-h-screen bg-brand-dark text-white">
+    <div className={`flex min-h-screen bg-brand-dark text-white ${theme}`}>
       <div className="hidden lg:block">
         <Sidebar
           groups={visibleGroups}
@@ -106,6 +124,8 @@ export default function App() {
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
           onLogout={handleLogout}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       </div>
 
@@ -118,9 +138,26 @@ export default function App() {
               <><span className="text-gray-700 text-xs">/</span><span className="text-xs text-gray-500">{activeGroup.name}</span></>
             )}
           </div>
-          <span className="text-[10px] text-gray-600 bg-brand-light px-2 py-1 rounded border border-brand-light truncate max-w-[130px]">
-            {pageLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-1 rounded-lg bg-brand-light border border-white/5 text-gray-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0"
+              title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+            >
+              {theme === 'dark' ? (
+                <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+            <span className="text-[10px] text-gray-650 bg-brand-light px-2 py-1 rounded border border-brand-light truncate max-w-[120px]">
+              {pageLabel}
+            </span>
+          </div>
         </header>
 
         <div className="px-4 py-6 lg:p-10">
@@ -142,7 +179,14 @@ export default function App() {
                 <ConsolidadoView group={activeGroup} onStoreClick={id => handleViewChange({ type: 'store', storeId: id })} />
               )}
               {activeView.type === 'ranking' && activeGroup.stores.length > 0 && <RankingView stores={activeGroup.stores} />}
-              {activeView.type === 'store' && activeStore && <StoreDetailView store={activeStore} fee={activeStore.fee ?? activeGroup.fee} />}
+              {activeView.type === 'store' && activeStore && (
+                <StoreDetailView 
+                  store={activeStore} 
+                  fee={activeStore.fee ?? activeGroup.fee} 
+                  isMaster={isMaster} 
+                  groupId={activeGroupId} 
+                />
+              )}
             </motion.div>
           </AnimatePresence>
 
