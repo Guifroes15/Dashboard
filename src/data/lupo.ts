@@ -50,10 +50,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Ponta Negra',
       color: '#be185d',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:1942,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:350 },
-        { mes:'Fev/26', chave:'2026-02', vendas:2751.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:400 },
-        { mes:'Mar/26', chave:'2026-03', vendas:2050,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:350 },
-        { mes:'Abr/26', chave:'2026-04', vendas:6680.80, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:550 },
+        { mes:'Jan/26', chave:'2026-01', vendas:1942,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1045.20 },
+        { mes:'Fev/26', chave:'2026-02', vendas:2751.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:767.41 },
+        { mes:'Mar/26', chave:'2026-03', vendas:2050,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1065.52 },
+        { mes:'Abr/26', chave:'2026-04', vendas:6680.80, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:864.31 },
       ],
       planos: [
         { tarefa:'Abril explosivo (+226%) — entender o que causou e replicar', status:'Alta' },
@@ -68,10 +68,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Sumaúma',
       color: '#9d174d',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:200 },
-        { mes:'Fev/26', chave:'2026-02', vendas:1311,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
-        { mes:'Mar/26', chave:'2026-03', vendas:3051,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:400 },
-        { mes:'Abr/26', chave:'2026-04', vendas:843,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:250 },
+        { mes:'Jan/26', chave:'2026-01', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:791.78 },
+        { mes:'Fev/26', chave:'2026-02', vendas:1311,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:1105.95 },
+        { mes:'Mar/26', chave:'2026-03', vendas:3051,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:599.25 },
+        { mes:'Abr/26', chave:'2026-04', vendas:843,     faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:682.65 },
       ],
       planos: [
         { tarefa:'Resultado inconsistente — revisar estratégia de disparos', status:'Alta' },
@@ -86,10 +86,10 @@ export const LUPO: GroupData = {
       name: 'Lupo Manauara',
       color: '#f472b6',
       historico: [
-        { mes:'Jan/26', chave:'2026-01', vendas:2085.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
-        { mes:'Fev/26', chave:'2026-02', vendas:6699,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:450 },
-        { mes:'Mar/26', chave:'2026-03', vendas:2168.50, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:300 },
-        { mes:'Abr/26', chave:'2026-04', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:100 },
+        { mes:'Jan/26', chave:'2026-01', vendas:2085.10, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:800.94 },
+        { mes:'Fev/26', chave:'2026-02', vendas:6699,    faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:596.97 },
+        { mes:'Mar/26', chave:'2026-03', vendas:2168.50, faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:687.12 },
+        { mes:'Abr/26', chave:'2026-04', vendas:0,       faturamentoLoja:0, conversao:0, mensagens:0, qtdVendas:0, ticketMedio:0, pctAureFat:0, verba:756.05 },
       ],
       planos: [
         { tarefa:'Fevereiro foi o pico — entender o que diferenciou aquele mês', status:'Alta' },
