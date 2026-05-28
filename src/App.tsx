@@ -74,6 +74,8 @@ export default function App() {
     : GROUPS.filter(g => g.id === access?.groupId);
 
   const isMaster = access?.isMaster ?? false;
+  const isStaff  = access?.isStaff  ?? false;
+  const nomeUsuario = access?.nome ?? '';
 
   useEffect(() => {
     if (visibleGroups.length > 0 && !activeGroupId) {
@@ -84,7 +86,7 @@ export default function App() {
   const activeGroup = visibleGroups.find(g => g.id === activeGroupId) ?? visibleGroups[0];
 
   const handleGroupChange = (id: string) => { setActiveGroupId(id); setActiveView({ type: 'consolidado' }); };
-  const handleNavigate = (view: ActiveView, groupId: string) => { setActiveGroupId(groupId); setActiveView(view); };
+  const handleNavigate = (gid: string, view: ActiveView) => { setActiveGroupId(gid); setActiveView(view); };
   const handleViewChange = (view: ActiveView) => setActiveView(view);
 
   const activeStore: StoreData | undefined =
@@ -166,7 +168,7 @@ export default function App() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}>
 
-              {activeView.type === 'home' && <HomeView groups={visibleGroups} onNavigate={handleNavigate} isMaster={isMaster} />}
+              {activeView.type === 'home' && <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} />}
 
               {/* Ferramentas IA — só master */}
               {isMaster && activeView.type === 'atendimento' && <AtendimentoView />}
