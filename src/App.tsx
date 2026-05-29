@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { GROUPS } from './data';
 import { GroupData, StoreData } from './types';
 import { Sidebar } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
@@ -12,6 +11,8 @@ import { AccessGate, AccessState } from './components/views/AccessGate';
 import { AtendimentoView } from './components/views/AtendimentoView';
 import { CriativosView }   from './components/views/CriativosView';
 import { VipView }         from './components/views/VipView';
+import { DataEntryView }   from './components/views/DataEntryView';
+import { useGroups }       from './hooks/useGroups';
 import { motion, AnimatePresence } from 'motion/react';
 
 export type ActiveView =
@@ -21,30 +22,41 @@ export type ActiveView =
   | { type: 'atendimento' }
   | { type: 'criativos' }
   | { type: 'vip' }
+  | { type: 'data-entry' }
   | { type: 'store'; storeId: string };
 
 const SESSION_KEY = 'aure_access';
 
 export default function App() {
-  const [access, setAccess]           = useState<AccessState | null>(null);
+  const [access, setAccess]               = useState<AccessState | null>(null);
   const [activeGroupId, setActiveGroupId] = useState('');
-  const [activeView, setActiveView]   = useState<ActiveView>({ type: 'home' });
-  const [theme, setTheme]             = useState<'dark' | 'light'>(() => {
+  const [activeView, setActiveView]       = useState<ActiveView>({ type: 'home' });
+  const [theme, setTheme]                 = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('aure_theme') as 'dark' | 'light') ?? 'dark';
   });
 
-  // Aplica tema globalmente no elemento html
+  const { groups, seeded } = useGroups();
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
   }, [theme]);
 
-  // Persiste sessão
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) {
-      try { setAccess(JSON.parse(saved)); } catch { sessionStorage.removeItem(SESSION_KEY); }
+      try {
+        const parsed = JSON.parse(saved);
+        // Migrar formato antigo: groupId (string) -> groupIds (array)
+        if (parsed.groupId !== undefined && parsed.groupIds === undefined) {
+          parsed.groupIds = parsed.groupId === 'all' ? 'all' : [parsed.groupId as string];
+          delete parsed.groupId;
+        }
+        setAccess(parsed as AccessState);
+      } catch {
+        sessionStorage.removeItem(SESSION_KEY);
+      }
     }
   }, []);
 
@@ -68,26 +80,27 @@ export default function App() {
     setActiveView({ type: 'home' });
   };
 
-  // Grupos visíveis para este acesso
-  const visibleGroups = access?.groupId === 'all'
-    ? GROUPS
-    : GROUPS.filter(g => g.id === access?.groupId);
+  // Filtra grupos visíveis com base no perfil de acesso
+  const visibleGroups: GroupData[] = access == null ? [] :
+    access.groupIds === 'all'
+      ? groups
+      : groups.filter(g => Array.isArray(access.groupIds) && access.groupIds.includes(g.id));
 
-  const isMaster = access?.isMaster ?? false;
-  const isStaff  = access?.isStaff  ?? false;
+  const isMaster    = access?.isMaster ?? false;
+  const isStaff     = access?.isStaff  ?? false;
   const nomeUsuario = access?.nome ?? '';
 
   useEffect(() => {
     if (visibleGroups.length > 0 && !activeGroupId) {
       setActiveGroupId(visibleGroups[0].id);
     }
-  }, [access]);
+  }, [access, groups]);
 
   const activeGroup = visibleGroups.find(g => g.id === activeGroupId) ?? visibleGroups[0];
 
   const handleGroupChange = (id: string) => { setActiveGroupId(id); setActiveView({ type: 'consolidado' }); };
-  const handleNavigate = (gid: string, view: ActiveView) => { setActiveGroupId(gid); setActiveView(view); };
-  const handleViewChange = (view: ActiveView) => setActiveView(view);
+  const handleNavigate    = (gid: string, view: ActiveView) => { setActiveGroupId(gid); setActiveView(view); };
+  const handleViewChange  = (view: ActiveView) => setActiveView(view);
 
   const activeStore: StoreData | undefined =
     activeView.type === 'store' ? activeGroup?.stores.find(s => s.id === activeView.storeId) : undefined;
@@ -101,16 +114,20 @@ export default function App() {
     : activeView.type === 'atendimento' ? 'Análise de Atendimento'
     : activeView.type === 'criativos'   ? 'Inteligência de Criativos'
     : activeView.type === 'vip'         ? 'Gerador VIP'
+    : activeView.type === 'data-entry'  ? 'Lançar Resultado'
     : activeView.type === 'consolidado' ? (activeGroup?.name ?? '')
     : activeView.type === 'ranking'     ? 'Ranking'
     : activeStore?.name ?? '—';
 
-  // Redireciona acesso não-master para fora das ferramentas IA
+  // Protege views restritas
   useEffect(() => {
-    if (!isMaster && ['atendimento','criativos','vip'].includes(activeView.type)) {
+    if (!isMaster && ['atendimento', 'criativos', 'vip'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
-  }, [isMaster, activeView.type]);
+    if (!isMaster && !isStaff && activeView.type === 'data-entry') {
+      setActiveView({ type: 'home' });
+    }
+  }, [isMaster, isStaff, activeView.type]);
 
   if (!access) return <AccessGate onAccess={handleAccess} />;
   if (!activeGroup) return <AccessGate onAccess={handleAccess} />;
@@ -123,6 +140,7 @@ export default function App() {
           activeGroupId={activeGroupId}
           activeView={activeView}
           isMaster={isMaster}
+          isStaff={isStaff}
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
           onLogout={handleLogout}
@@ -168,12 +186,19 @@ export default function App() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}>
 
-              {activeView.type === 'home' && <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} />}
+              {activeView.type === 'home' && (
+                <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} />
+              )}
 
               {/* Ferramentas IA — só master */}
               {isMaster && activeView.type === 'atendimento' && <AtendimentoView />}
               {isMaster && activeView.type === 'criativos'   && <CriativosView />}
               {isMaster && activeView.type === 'vip'         && <VipView />}
+
+              {/* Lançar resultado — master e staff */}
+              {(isMaster || isStaff) && activeView.type === 'data-entry' && (
+                <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
+              )}
 
               {/* Dashboard */}
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}
@@ -182,11 +207,11 @@ export default function App() {
               )}
               {activeView.type === 'ranking' && activeGroup.stores.length > 0 && <RankingView stores={activeGroup.stores} />}
               {activeView.type === 'store' && activeStore && (
-                <StoreDetailView 
-                  store={activeStore} 
-                  fee={activeStore.fee ?? activeGroup.fee} 
-                  isMaster={isMaster} 
-                  groupId={activeGroupId} 
+                <StoreDetailView
+                  store={activeStore}
+                  fee={activeStore.fee ?? activeGroup.fee}
+                  isMaster={isMaster}
+                  groupId={activeGroupId}
                 />
               )}
             </motion.div>

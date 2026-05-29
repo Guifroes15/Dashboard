@@ -8,14 +8,14 @@ import { TrendingUp, Lock, Eye, EyeOff } from 'lucide-react';
 //  nome      → nome exibido na saudação (só aparece quando isMaster = true)
 //
 export const ACCESS_CONFIG: Record<string, {
-  groupId: string | 'all';
+  groupIds: string[] | 'all';
   isMaster: boolean;
   isStaff: boolean;
   nome: string;
 }> = {
   // ── Você (acesso total + IA + saudação) ──────────────────────────────────
   'guilherme1202': {
-    groupId: 'all',
+    groupIds: 'all',
     isMaster: true,
     isStaff:  false,
     nome:     'Guilherme',
@@ -23,13 +23,13 @@ export const ACCESS_CONFIG: Record<string, {
 
   // ── Gestores de tráfego (acesso total + saudação, sem IA) ─────────────────
   'elisson2026': {
-    groupId: 'all',
+    groupIds: 'all',
     isMaster: false,
     isStaff:  true,
     nome:     'Elisson',
   },
   'guilhermegomes2026': {
-    groupId: 'all',
+    groupIds: 'all',
     isMaster: false,
     isStaff:  true,
     nome:     'Guilherme Gomes',
@@ -37,23 +37,24 @@ export const ACCESS_CONFIG: Record<string, {
 
   // ── Colaboradores Aure (todos os grupos, sem IA, sem saudação) ────────────
   'aure2026': {
-    groupId: 'all',
+    groupIds: 'all',
     isMaster: false,
     isStaff:  true,
     nome:     '',
   },
 
   // ── Clientes (só o grupo deles, sem IA, sem saudação) ────────────────────
-  'yamcol2026':    { groupId: 'yamcol',    isMaster: false, isStaff: false, nome: '' },
-  'barbosa2026':   { groupId: 'barbosa',   isMaster: false, isStaff: false, nome: '' },
-  'paralelas2026': { groupId: 'paralelas', isMaster: false, isStaff: false, nome: '' },
-  'lupo2026':      { groupId: 'lupo',      isMaster: false, isStaff: false, nome: '' },
-  'ferracini2026': { groupId: 'ferracini', isMaster: false, isStaff: false, nome: '' },
+  // Para gestor com múltiplos grupos: groupIds: ['yamcol', 'barbosa']
+  'yamcol2026':    { groupIds: ['yamcol'],    isMaster: false, isStaff: false, nome: '' },
+  'barbosa2026':   { groupIds: ['barbosa'],   isMaster: false, isStaff: false, nome: '' },
+  'paralelas2026': { groupIds: ['paralelas'], isMaster: false, isStaff: false, nome: '' },
+  'lupo2026':      { groupIds: ['lupo'],      isMaster: false, isStaff: false, nome: '' },
+  'ferracini2026': { groupIds: ['ferracini'], isMaster: false, isStaff: false, nome: '' },
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AccessState {
-  groupId: string | 'all';
+  groupIds: string[] | 'all';
   isMaster: boolean;
   isStaff:  boolean;
   nome:     string;

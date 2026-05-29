@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -11,18 +11,20 @@ interface Props {
   onViewChange: (view: ActiveView) => void;
   onLogout?: () => void;
   isMaster?: boolean;
+  isStaff?: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }
 
-export function Sidebar({ 
-  groups, 
-  activeGroupId, 
-  activeView, 
-  onGroupChange, 
-  onViewChange, 
-  onLogout, 
+export function Sidebar({
+  groups,
+  activeGroupId,
+  activeView,
+  onGroupChange,
+  onViewChange,
+  onLogout,
   isMaster = false,
+  isStaff = false,
   theme,
   onToggleTheme
 }: Props) {
@@ -141,6 +143,24 @@ export function Sidebar({
                 </div>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Lançar Resultado — master e staff */}
+        {(isMaster || isStaff) && (
+          <div className="space-y-0.5">
+            <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">Operações</p>
+            <button
+              onClick={() => onViewChange({ type: 'data-entry' })}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                activeView.type === 'data-entry'
+                  ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                  : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+              }`}
+            >
+              <PlusCircle className="w-4 h-4 shrink-0" />
+              <span className="text-sm font-bold">Lançar Resultado</span>
+            </button>
           </div>
         )}
 
