@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GroupData } from '../../types';
 import { ActiveView } from '../../App';
 import { totalVendas, ultimoMes, calcRoi, formatBRL } from '../../utils';
-import { TrendingUp, TrendingDown, Minus, ArrowRight, Store, AlertTriangle, CheckCircle, ListChecks, FileText, ChevronRight, Target, Lightbulb } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ArrowRight, Store, AlertTriangle, CheckCircle, ListChecks, FileText, ChevronRight, Target, Lightbulb, Wallet } from 'lucide-react';
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
+import { getAccountBalance } from '../../services/metaService';
+import { META_ACCOUNTS } from '../../config/metaAccounts';
 
 interface Props {
   groups: GroupData[];
@@ -21,6 +23,22 @@ function trend(ult: ReturnType<typeof ultimoMes>, pen: ReturnType<typeof ultimoM
 export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Props) {
   const [gestaoGrupo, setGestaoGrupo] = useState<GroupData | null>(null);
   const gestao = useGestao();
+  const [saldos, setSaldos] = useState<Record<string, number | null>>({});
+
+  useEffect(() => {
+    const storesComLimite = groups
+      .flatMap(g => g.stores)
+      .filter(s => s.saldoMeta?.limiteAlerta && META_ACCOUNTS[s.id]);
+
+    if (storesComLimite.length === 0) return;
+
+    Promise.all(
+      storesComLimite.map(async s => {
+        const res = await getAccountBalance(META_ACCOUNTS[s.id]);
+        return [s.id, res?.balance ?? null] as [string, number | null];
+      })
+    ).then(entries => setSaldos(Object.fromEntries(entries)));
+  }, [groups]);
 
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -37,6 +55,12 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Pr
   const alertas = allStores.filter(s => {
     const hist = s.historico.filter(m => m.vendas >= 0).slice(-3);
     return hist.length >= 3 && hist.every((m, i, a) => i === 0 || m.vendas <= a[i-1].vendas);
+  });
+
+  const alertasSaldo = allStores.filter(s => {
+    if (!s.saldoMeta?.limiteAlerta || !META_ACCOUNTS[s.id]) return false;
+    const saldo = saldos[s.id];
+    return saldo !== null && saldo !== undefined && saldo < s.saldoMeta.limiteAlerta;
   });
 
   const thoughts = [
@@ -101,6 +125,34 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Pr
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/30 border border-amber-900/30 text-xs text-amber-600 hover:bg-amber-900/40 transition-all cursor-pointer">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
                   {s.name} <ArrowRight className="w-3 h-3" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Alertas de saldo Meta Ads */}
+      {alertasSaldo.length > 0 && (
+        <div className="mb-8 bg-red-950/20 border border-red-900/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet className="w-4 h-4 text-red-500 animate-pulse" />
+            <p className="text-xs font-bold text-red-500 uppercase tracking-wider">
+              {alertasSaldo.length} {alertasSaldo.length === 1 ? 'conta com saldo Meta baixo' : 'contas com saldo Meta baixo'}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {alertasSaldo.map(s => {
+              const g = groups.find(gr => gr.stores.includes(s))!;
+              return (
+                <button key={s.id} onClick={() => onNavigate(g.id, { type: 'store', storeId: s.id })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/30 border border-red-900/30 text-xs text-red-400 hover:bg-red-900/40 transition-all cursor-pointer">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
+                  <span>{s.name}</span>
+                  <span className="text-red-600">
+                    R$ {(saldos[s.id] ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               );
             })}

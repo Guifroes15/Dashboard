@@ -85,6 +85,21 @@ export async function getAccountTimeSeries(
   }));
 }
 
+export async function getAccountBalance(
+  adAccountId: string
+): Promise<{ balance: number; currency: string } | null> {
+  const url = `${BASE}/${adAccountId}?fields=balance,currency&access_token=${TOKEN}`;
+  try {
+    const json = await apiFetch(url);
+    return {
+      balance: parseFloat(json.balance ?? '0') / 100,
+      currency: json.currency ?? 'BRL',
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getCampaigns(
   adAccountId: string,
   datePreset: DatePreset

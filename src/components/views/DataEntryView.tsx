@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { PlusCircle, CheckCircle, AlertCircle, RefreshCw, Database } from 'lucide-react';
+import { PlusCircle, CheckCircle, AlertCircle, RefreshCw, Database, Wallet } from 'lucide-react';
 import { GroupData, MonthData } from '../../types';
-import { addOrUpdateMonthData, seedGroupsToFirestore } from '../../services/groupService';
+import { addOrUpdateMonthData, seedGroupsToFirestore, updateSaldoMeta } from '../../services/groupService';
 import { GROUPS } from '../../data';
 
 const MONTHS = [
@@ -48,8 +48,17 @@ export function DataEntryView({ groups, seeded, isMaster }: Props) {
   const [seeding, setSeeding]   = useState(false);
   const [seedDone, setSeedDone] = useState(false);
 
+  const [saldoGroupId, setSaldoGroupId] = useState(groups[0]?.id ?? '');
+  const [saldoStoreId, setSaldoStoreId] = useState('');
+  const [limiteAlerta, setLimiteAlerta] = useState('');
+  const [saldoStatus, setSaldoStatus]   = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [saldoError, setSaldoError]     = useState('');
+
   const selectedGroup = groups.find((g) => g.id === groupId);
   const stores = selectedGroup?.stores ?? [];
+
+  const saldoGroup = groups.find((g) => g.id === saldoGroupId);
+  const saldoStores = saldoGroup?.stores ?? [];
 
   const storeOptions = useMemo(() => {
     if (!selectedGroup) return [];
@@ -96,6 +105,25 @@ export function DataEntryView({ groups, seeded, isMaster }: Props) {
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao salvar');
       setStatus('error');
+    }
+  };
+
+  const handleSaldoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!saldoStoreId) return;
+
+    setSaldoStatus('loading');
+    setSaldoError('');
+    try {
+      await updateSaldoMeta(saldoGroupId, saldoStoreId, {
+        limiteAlerta: parseFloat(limiteAlerta) || 0,
+      });
+      setSaldoStatus('success');
+      setLimiteAlerta('');
+      setTimeout(() => setSaldoStatus('idle'), 3000);
+    } catch (err) {
+      setSaldoError(err instanceof Error ? err.message : 'Erro ao salvar');
+      setSaldoStatus('error');
     }
   };
 
@@ -308,6 +336,83 @@ export function DataEntryView({ groups, seeded, isMaster }: Props) {
             <><RefreshCw className="w-4 h-4 animate-spin" /> Salvando…</>
           ) : (
             <><PlusCircle className="w-4 h-4" /> Salvar resultado de {mes}</>
+          )}
+        </button>
+      </form>
+      {/* Alerta de Saldo Meta Ads */}
+      <div>
+        <h2 className="text-lg font-black tracking-tight text-white">Alerta de Saldo Meta Ads</h2>
+        <p className="text-sm text-gray-500 mt-1">Configure o limite mínimo de saldo por loja. O saldo real é buscado automaticamente da API do Meta.</p>
+      </div>
+
+      <form onSubmit={handleSaldoSubmit} className="bg-brand-medium border border-brand-light rounded-2xl p-6 space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Grupo</label>
+            <select
+              value={saldoGroupId}
+              onChange={(e) => { setSaldoGroupId(e.target.value); setSaldoStoreId(''); }}
+              className={inputCls + ' appearance-none cursor-pointer'}
+            >
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Loja</label>
+            <select
+              value={saldoStoreId}
+              onChange={(e) => setSaldoStoreId(e.target.value)}
+              className={inputCls + ' appearance-none cursor-pointer'}
+              required
+            >
+              <option value="" disabled>Selecione a loja</option>
+              {saldoStores.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="h-px bg-brand-light" />
+
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className={labelCls}>Limite de alerta (R$)</label>
+            <input
+              type="number" min="0" step="0.01" placeholder="0.00"
+              value={limiteAlerta}
+              onChange={(e) => setLimiteAlerta(e.target.value)}
+              className={inputCls}
+              required
+            />
+            <p className="text-[9px] text-gray-600 mt-1">Alerta aparece quando saldo cair abaixo deste valor</p>
+          </div>
+        </div>
+
+        {saldoStatus === 'success' && (
+          <div className="flex items-center gap-2 text-green-400 text-sm font-bold">
+            <CheckCircle className="w-4 h-4" />
+            Saldo atualizado com sucesso!
+          </div>
+        )}
+        {saldoStatus === 'error' && (
+          <div className="flex items-center gap-2 text-red-400 text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {saldoError}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={!saldoStoreId || saldoStatus === 'loading'}
+          className="w-full py-3 bg-brand-purple hover:bg-brand-purple/90 text-white rounded-xl font-bold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+        >
+          {saldoStatus === 'loading' ? (
+            <><RefreshCw className="w-4 h-4 animate-spin" /> Salvando…</>
+          ) : (
+            <><Wallet className="w-4 h-4" /> Salvar saldo</>
           )}
         </button>
       </form>

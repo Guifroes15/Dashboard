@@ -33,6 +33,10 @@ export interface PlanItem {
   status: 'Alta' | 'Média' | 'Baixa' | 'Sucesso' | 'Teste';
 }
 
+export interface SaldoMeta {
+  limiteAlerta: number;
+}
+
 export interface StoreData {
   id: string;
   name: string;
@@ -40,6 +44,7 @@ export interface StoreData {
   fee?: number;
   historico: MonthData[];
   planos: PlanItem[];
+  saldoMeta?: SaldoMeta;
 }
 
 export interface GroupData {
