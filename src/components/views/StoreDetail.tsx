@@ -1,6 +1,6 @@
 // StoreDetail.tsx — com filtro de meses e simulador
-import React, { useState, useMemo } from 'react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { StoreData } from '../../types';
 import { StatCard } from '../ui/StatCard';
@@ -10,17 +10,32 @@ import { ProjecaoCard } from '../ui/ProjecaoCard';
 import { RoiPanel } from '../ui/RoiPanel';
 import { MonthFilter } from '../ui/MonthFilter';
 import { SimuladorView } from './SimuladorView';
-import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar } from 'lucide-react';
+import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users } from 'lucide-react';
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 import { useGestao } from '../../hooks/useGestao';
+import { META_ACCOUNTS } from '../../config/metaAccounts';
+import { DatePreset, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
 
-interface Props { 
-  store: StoreData; 
+interface Props {
+  store: StoreData;
   fee: number;
   isMaster?: boolean;
+  isStaff?: boolean;
   groupId?: string;
 }
-type Tab = 'visao' | 'simulador';
+type Tab = 'visao' | 'simulador' | 'meta-ads';
+
+const DATE_PRESETS: { label: string; value: DatePreset }[] = [
+  { label: 'Últimos 7 dias',  value: 'last_7d'    },
+  { label: 'Últimos 30 dias', value: 'last_30d'   },
+  { label: 'Este mês',        value: 'this_month' },
+  { label: 'Mês passado',     value: 'last_month' },
+];
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE: 'text-green-400 bg-green-400/10', PAUSED: 'text-yellow-400 bg-yellow-400/10', ARCHIVED: 'text-gray-500 bg-gray-500/10',
+};
+const STATUS_LABELS: Record<string, string> = { ACTIVE: 'Ativo', PAUSED: 'Pausada', ARCHIVED: 'Arquivada' };
+const fmtN = (n: number) => n.toLocaleString('pt-BR');
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,9 +60,40 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee, isMaster = false, groupId = '' }: Props) {
+export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '' }: Props) {
   const [tab, setTab] = useState<Tab>('visao');
   const [showFilter, setShowFilter] = useState(false);
+
+  const adAccountId   = META_ACCOUNTS[store.id];
+  const canSeeMetaAds = (isMaster || isStaff) && !!adAccountId;
+
+  // Meta Ads state
+  const [metaDatePreset, setMetaDatePreset] = useState<DatePreset>('last_30d');
+  const [metaLoading, setMetaLoading]       = useState(false);
+  const [metaError, setMetaError]           = useState<string | null>(null);
+  const [metaInsights, setMetaInsights]     = useState<MetaInsights | null>(null);
+  const [metaTimeSeries, setMetaTimeSeries] = useState<MetaDailyInsight[]>([]);
+  const [metaCampaigns, setMetaCampaigns]   = useState<MetaCampaign[]>([]);
+
+  const loadMeta = () => {
+    if (!adAccountId) return;
+    setMetaLoading(true);
+    setMetaError(null);
+    Promise.all([
+      getAccountInsights(adAccountId, metaDatePreset),
+      getAccountTimeSeries(adAccountId, metaDatePreset),
+      getCampaigns(adAccountId, metaDatePreset),
+    ])
+      .then(([ins, ts, camps]) => {
+        setMetaInsights(ins);
+        setMetaTimeSeries(ts);
+        setMetaCampaigns(camps.sort((a, b) => b.spend - a.spend));
+      })
+      .catch(err => setMetaError(err.message))
+      .finally(() => setMetaLoading(false));
+  };
+
+  useEffect(() => { if (tab === 'meta-ads') loadMeta(); }, [tab, metaDatePreset, store.id]);
 
   const gestao = useGestao();
   const storeGestate = gestao.getLoja(groupId, store.id, store.name);
@@ -178,6 +224,11 @@ export function StoreDetailView({ store, fee, isMaster = false, groupId = '' }: 
           <button onClick={() => setTab('simulador')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'simulador' ? 'bg-brand-purple text-white' : 'text-gray-500 hover:text-gray-300'}`}>
             <Calculator className="w-3.5 h-3.5" />Simulador
           </button>
+          {canSeeMetaAds && (
+            <button onClick={() => setTab('meta-ads')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'meta-ads' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+              <Target className="w-3.5 h-3.5" />Meta Ads
+            </button>
+          )}
         </div>
 
         {tab === 'visao' && (
@@ -403,6 +454,138 @@ export function StoreDetailView({ store, fee, isMaster = false, groupId = '' }: 
 
       {/* ── ABA SIMULADOR ── */}
       {tab === 'simulador' && <SimuladorView store={store} fee={fee} />}
+
+      {/* ── ABA META ADS ── */}
+      {tab === 'meta-ads' && canSeeMetaAds && (
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-5">
+
+          {/* Filtro período */}
+          <motion.div variants={itemVariants} className="flex items-center justify-between gap-3">
+            <div className="flex gap-1 bg-brand-medium border border-brand-light rounded-xl p-1">
+              {DATE_PRESETS.map(p => (
+                <button
+                  key={p.value}
+                  onClick={() => setMetaDatePreset(p.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${metaDatePreset === p.value ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={loadMeta} disabled={metaLoading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-brand-light rounded-lg px-3 py-2 transition-all disabled:opacity-40">
+              <RefreshCw className={`w-3.5 h-3.5 ${metaLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </motion.div>
+
+          {/* Erro */}
+          {metaError && (
+            <motion.div variants={itemVariants} className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3 text-red-400 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />{metaError}
+            </motion.div>
+          )}
+
+          {/* Skeleton */}
+          {metaLoading && !metaInsights && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[...Array(7)].map((_, i) => <div key={i} className="bg-brand-medium border border-brand-light rounded-2xl p-4 animate-pulse h-20" />)}
+            </div>
+          )}
+
+          {/* Metric Cards */}
+          {metaInsights && (
+            <motion.div variants={containerVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { label: 'Valor Gasto',       value: formatBRL(metaInsights.spend),         icon: DollarSign,    color: 'text-brand-purple2' },
+                { label: 'Mensagens',          value: fmtN(metaInsights.mensagens),          icon: MessageSquare, color: 'text-green-400'     },
+                { label: 'Custo / Mensagem',   value: metaInsights.custoMensagem > 0 ? formatBRL(metaInsights.custoMensagem) : '—', icon: TrendingUp, color: 'text-blue-400' },
+                { label: 'Alcance',            value: fmtN(metaInsights.reach),              icon: Users,         color: 'text-amber-400'     },
+                { label: 'Impressões',         value: fmtN(metaInsights.impressions),        icon: Eye,           color: 'text-cyan-400'      },
+                { label: 'Cliques',            value: fmtN(metaInsights.clicks),             icon: MousePointer,  color: 'text-pink-400'      },
+                { label: 'Curtidas / Seguid.', value: fmtN(metaInsights.likes),              icon: ThumbsUp,      color: 'text-orange-400'    },
+              ].map(card => (
+                <motion.div key={card.label} variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <card.icon className={`w-4 h-4 shrink-0 ${card.color}`} />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 leading-tight">{card.label}</p>
+                  </div>
+                  <p className={`text-xl font-black ${card.color}`}>{card.value}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Gráficos */}
+          {metaTimeSeries.length > 1 && (
+            <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <motion.div variants={itemVariants}>
+                <ChartCard title="Gasto diário (R$)">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={metaTimeSeries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} tickFormatter={d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} interval="preserveStartEnd" />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} tickFormatter={v => `R$${v}`} />
+                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8, fontSize: 12 }} labelFormatter={d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR')} formatter={(v: number) => [formatBRL(v), 'Gasto']} />
+                      <Bar dataKey="spend" fill="#2563eb" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <ChartCard title="Mensagens geradas">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={metaTimeSeries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e28" vertical={false} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} tickFormatter={d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} interval="preserveStartEnd" />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 9 }} />
+                      <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8, fontSize: 12 }} labelFormatter={d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR')} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: '#6b7280' }} />
+                      <Line dataKey="mensagens" stroke="#22c55e" strokeWidth={2} dot={false} name="Mensagens" />
+                      <Line dataKey="reach"     stroke="#60a5fa" strokeWidth={2} dot={false} name="Alcance" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Tabela de campanhas */}
+          {metaCampaigns.length > 0 && (
+            <motion.div variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-brand-light">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Campanhas</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-brand-light">
+                      {['Campanha', 'Status', 'Gasto', 'Alcance', 'Impressões', 'Mensagens', 'Custo/Msg'].map(h => (
+                        <th key={h} className="text-left text-[9px] font-bold uppercase tracking-widest text-gray-600 px-4 py-3">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {metaCampaigns.map((c, i) => (
+                      <tr key={c.id} className={`border-b border-brand-light/50 hover:bg-brand-light/20 transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}>
+                        <td className="px-4 py-3 text-xs font-medium text-white max-w-[180px] truncate">{c.name}</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[c.status] ?? 'text-gray-400 bg-gray-400/10'}`}>
+                            {STATUS_LABELS[c.status] ?? c.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-bold text-white">{c.spend > 0 ? formatBRL(c.spend) : '—'}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{c.reach > 0 ? fmtN(c.reach) : '—'}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{c.impressions > 0 ? fmtN(c.impressions) : '—'}</td>
+                        <td className="px-4 py-3 text-xs font-bold text-green-400">{c.mensagens > 0 ? fmtN(c.mensagens) : '—'}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{c.custoMensagem > 0 ? formatBRL(c.custoMensagem) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
     </motion.div>
   );
 }

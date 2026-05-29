@@ -219,6 +219,7 @@ export default function App() {
                   store={activeStore}
                   fee={activeStore.fee ?? activeGroup.fee}
                   isMaster={isMaster}
+                  isStaff={isStaff}
                   groupId={activeGroupId}
                 />
               )}
