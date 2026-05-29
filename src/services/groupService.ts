@@ -6,7 +6,7 @@ import {
   runTransaction,
   setDoc,
 } from 'firebase/firestore';
-import { GroupData, MonthData, SaldoMeta } from '../types';
+import { GroupData, MonthData } from '../types';
 
 const GROUP_ORDER = ['yamcol', 'barbosa', 'paralelas', 'lupo', 'ferracini'];
 
@@ -34,26 +34,6 @@ export async function seedGroupsToFirestore(groups: GroupData[]): Promise<void> 
   for (const group of groups) {
     await setDoc(doc(db, 'groups', group.id), group);
   }
-}
-
-export async function updateSaldoMeta(
-  groupId: string,
-  storeId: string,
-  saldoMeta: SaldoMeta
-): Promise<void> {
-  const groupRef = doc(db, 'groups', groupId);
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(groupRef);
-    if (!snap.exists()) throw new Error('Grupo não encontrado');
-
-    const groupData = snap.data() as GroupData;
-    const storeIdx = groupData.stores.findIndex((s) => s.id === storeId);
-    if (storeIdx === -1) throw new Error('Loja não encontrada');
-
-    const newStores = [...groupData.stores];
-    newStores[storeIdx] = { ...newStores[storeIdx], saldoMeta };
-    tx.update(groupRef, { stores: newStores });
-  });
 }
 
 export async function addOrUpdateMonthData(
