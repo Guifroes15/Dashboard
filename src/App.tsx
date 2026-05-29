@@ -203,10 +203,6 @@ export default function App() {
                 <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
               )}
 
-              {/* Meta Ads — master e staff */}
-              {(isMaster || isStaff) && activeView.type === 'meta-ads' && (
-                <MetaAdsView groups={visibleGroups} />
-              )}
 
               {/* Dashboard */}
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}

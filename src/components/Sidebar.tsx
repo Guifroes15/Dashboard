@@ -162,17 +162,6 @@ export function Sidebar({
                 <PlusCircle className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Lançar Resultado</span>
               </button>
-              <button
-                onClick={() => onViewChange({ type: 'meta-ads' })}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
-                  activeView.type === 'meta-ads'
-                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
-                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
-                }`}
-              >
-                <Target className="w-4 h-4 shrink-0" />
-                <span className="text-sm font-bold">Meta Ads</span>
-              </button>
             </div>
           </div>
         )}
