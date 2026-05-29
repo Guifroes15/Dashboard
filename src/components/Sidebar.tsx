@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Target } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -146,21 +146,34 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Lançar Resultado — master e staff */}
+        {/* Operações — master e staff */}
         {(isMaster || isStaff) && (
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">Operações</p>
-            <button
-              onClick={() => onViewChange({ type: 'data-entry' })}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
-                activeView.type === 'data-entry'
-                  ? 'bg-brand-light text-white border-l-2 border-brand-purple'
-                  : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
-              }`}
-            >
-              <PlusCircle className="w-4 h-4 shrink-0" />
-              <span className="text-sm font-bold">Lançar Resultado</span>
-            </button>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => onViewChange({ type: 'data-entry' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'data-entry'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Lançar Resultado</span>
+              </button>
+              <button
+                onClick={() => onViewChange({ type: 'meta-ads' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'meta-ads'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Target className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Meta Ads</span>
+              </button>
+            </div>
           </div>
         )}
 
