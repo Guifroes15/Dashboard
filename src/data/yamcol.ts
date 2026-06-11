@@ -25,6 +25,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:0,       faturamentoLoja:0,         conversao:0,    mensagens:214, qtdVendas:0, ticketMedio:0,      pctAureFat:0,    verba:1054.22 },
         { mes:'Mar/26', chave:'2026-03', vendas:2274.10, faturamentoLoja:72670.19,  conversao:4.43, mensagens:203, qtdVendas:9, ticketMedio:252.68, pctAureFat:3.13, verba:1055.02 },
         { mes:'Abr/26', chave:'2026-04', vendas:1804.30, faturamentoLoja:70515.65,  conversao:3.70, mensagens:135, qtdVendas:5, ticketMedio:360.86, pctAureFat:4.34, verba:846.58  },
+        { mes:'Mai/26', chave:'2026-05', vendas:1349.30, faturamentoLoja:53068.20,  conversao:3.31, mensagens:151, qtdVendas:5, ticketMedio:269.86, pctAureFat:2.54, verba:919.99  },
       ],
       planos: [
         { tarefa:'Reconhecimento no shopping — disparos focados em público local', status:'Alta' },
@@ -50,6 +51,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:0,       faturamentoLoja:0,         conversao:0,    mensagens:0,   qtdVendas:0,  ticketMedio:0,      pctAureFat:0,     verba:0       },
         { mes:'Mar/26', chave:'2026-03', vendas:3508.40, faturamentoLoja:121498.01, conversao:5.39, mensagens:167, qtdVendas:9,  ticketMedio:389.82, pctAureFat:2.89,  verba:1068.53 },
         { mes:'Abr/26', chave:'2026-04', vendas:5087.40, faturamentoLoja:118674.62, conversao:25,   mensagens:32,  qtdVendas:8,  ticketMedio:635.93, pctAureFat:4.29,  verba:343.38  },
+        { mes:'Mai/26', chave:'2026-05', vendas:5151.90, faturamentoLoja:121302.43, conversao:5.66, mensagens:106, qtdVendas:6,  ticketMedio:858.65, pctAureFat:4.25,  verba:902.77  },
       ],
       planos: [
         { tarefa:'Focar no Grupo VIP — fonte dos 25% de conversão em Abril', status:'Alta' },
@@ -73,6 +75,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:4858.50, faturamentoLoja:75358.35,  conversao:7.32, mensagens:123, qtdVendas:9,  ticketMedio:539.83, pctAureFat:6.45, verba:1064.60 },
         { mes:'Mar/26', chave:'2026-03', vendas:2185.90, faturamentoLoja:145121.85, conversao:1.69, mensagens:296, qtdVendas:5,  ticketMedio:437.18, pctAureFat:1.51, verba:1332.11 },
         { mes:'Abr/26', chave:'2026-04', vendas:2176,    faturamentoLoja:187362.61, conversao:2.20, mensagens:182, qtdVendas:4,  ticketMedio:544,    pctAureFat:1.16, verba:874.49  },
+        { mes:'Mai/26', chave:'2026-05', vendas:2556.27, faturamentoLoja:159601.38, conversao:11.69,mensagens:77,  qtdVendas:9,  ticketMedio:284.03, pctAureFat:1.60, verba:663.62  },
       ],
       planos: [
         { tarefa:'Aumentar volume de disparos — CMV alto exige mais vendas', status:'Alta' },
@@ -94,6 +97,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:3750,    faturamentoLoja:0,         conversao:16.38,mensagens:116, qtdVendas:19, ticketMedio:197.37, pctAureFat:0,    verba:1153.70 },
         { mes:'Mar/26', chave:'2026-03', vendas:4802.48, faturamentoLoja:144615.48, conversao:6.24, mensagens:433, qtdVendas:27, ticketMedio:177.87, pctAureFat:3.32, verba:1189.31 },
         { mes:'Abr/26', chave:'2026-04', vendas:4778.50, faturamentoLoja:187731.78, conversao:5.81, mensagens:241, qtdVendas:14, ticketMedio:341.32, pctAureFat:2.55, verba:864.88  },
+        { mes:'Mai/26', chave:'2026-05', vendas:3572.34, faturamentoLoja:140557.39, conversao:6.67, mensagens:345, qtdVendas:23, ticketMedio:155.32, pctAureFat:2.54, verba:892.56  },
       ],
       planos: [
         { tarefa:'Manter cadência de disparos — ROI positivo consistente', status:'Alta' },
@@ -118,6 +122,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:73967,    faturamentoLoja:258283.05, conversao:7.38, mensagens:244, qtdVendas:18, ticketMedio:4109.28, pctAureFat:34.23, verba:3798.86 },
         { mes:'Mar/26', chave:'2026-03', vendas:30877.41, faturamentoLoja:332614.94, conversao:7.06, mensagens:170, qtdVendas:12, ticketMedio:2573.12, pctAureFat:9.28,  verba:3374.26 },
         { mes:'Abr/26', chave:'2026-04', vendas:13276.25, faturamentoLoja:258283.05, conversao:3.13, mensagens:96,  qtdVendas:3,  ticketMedio:4425.42, pctAureFat:5.72,  verba:1625.97 },
+        { mes:'Mai/26', chave:'2026-05', vendas:14352.70, faturamentoLoja:459247.43, conversao:3.48, mensagens:115, qtdVendas:4,  ticketMedio:3588.18, pctAureFat:3.13,  verba:2037.74 },
       ],
       planos: [
         { tarefa:'Manter e escalar disparos — ROI positivo consistente', status:'Alta' },
@@ -139,6 +144,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:20335,    faturamentoLoja:213397.05, conversao:8.47, mensagens:118, qtdVendas:10, ticketMedio:2033.50, pctAureFat:10.91, verba:2920.69 },
         { mes:'Mar/26', chave:'2026-03', vendas:16241.50, faturamentoLoja:227133.99, conversao:4.65, mensagens:86,  qtdVendas:4,  ticketMedio:4060.38, pctAureFat:7.15,  verba:2309.66 },
         { mes:'Abr/26', chave:'2026-04', vendas:9368.90,  faturamentoLoja:213397.05, conversao:2.86, mensagens:70,  qtdVendas:2,  ticketMedio:4684.45, pctAureFat:4.82,  verba:1007.97 },
+        { mes:'Mai/26', chave:'2026-05', vendas:4775,     faturamentoLoja:394029.14, conversao:1.22, mensagens:82,  qtdVendas:1,  ticketMedio:4775,    pctAureFat:1.21,  verba:1089.57 },
       ],
       planos: [
         { tarefa:'Manter disparos — ROI positivo desde Jan/26', status:'Alta' },
@@ -160,6 +166,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:1630,   faturamentoLoja:71084,     conversao:0.93, mensagens:107, qtdVendas:1, ticketMedio:1630,  pctAureFat:2.29, verba:1051.87 },
         { mes:'Mar/26', chave:'2026-03', vendas:695,    faturamentoLoja:122416.43, conversao:2.55, mensagens:157, qtdVendas:4, ticketMedio:173.75,pctAureFat:0.57, verba:1056.49 },
         { mes:'Abr/26', chave:'2026-04', vendas:644.30, faturamentoLoja:126067.79, conversao:0.84, mensagens:119, qtdVendas:1, ticketMedio:644.30,pctAureFat:0.66, verba:846.29  },
+        { mes:'Mai/26', chave:'2026-05', vendas:6170,    faturamentoLoja:188913.24, conversao:2.30, mensagens:87,  qtdVendas:2, ticketMedio:3085,  pctAureFat:3.27, verba:800.71  },
       ],
       planos: [
         { tarefa:'Testar landing page de Grupo VIP para captação', status:'Teste' },
@@ -213,6 +220,7 @@ export const YAMCOL: GroupData = {
         { mes:'Fev/26', chave:'2026-02', vendas:515,     faturamentoLoja:31385.60,  conversao:3.75, mensagens:80, qtdVendas:3, ticketMedio:171.67, pctAureFat:1.64,  verba:1405.64 },
         { mes:'Mar/26', chave:'2026-03', vendas:2134,    faturamentoLoja:58003.80,  conversao:4.62, mensagens:65, qtdVendas:3, ticketMedio:711.33, pctAureFat:3.68,  verba:1153.53 },
         { mes:'Abr/26', chave:'2026-04', vendas:7256.60, faturamentoLoja:60000.08,  conversao:20,   mensagens:40, qtdVendas:8, ticketMedio:907.08, pctAureFat:16.32, verba:879.29  },
+        { mes:'Mai/26', chave:'2026-05', vendas:2619,    faturamentoLoja:54998.05,  conversao:11.43,mensagens:35, qtdVendas:4, ticketMedio:654.75, pctAureFat:4.76,  verba:651.61  },
       ],
       planos: [
         { tarefa:'Escalar os disparos — +1.310% em 3 meses', status:'Alta' },
