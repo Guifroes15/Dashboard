@@ -12,7 +12,8 @@ import { AtendimentoView } from './components/views/AtendimentoView';
 import { CriativosView }   from './components/views/CriativosView';
 import { VipView }         from './components/views/VipView';
 import { DataEntryView }   from './components/views/DataEntryView';
-import { MetaAdsView }     from './components/views/MetaAdsView';
+import { MetaAdsView }        from './components/views/MetaAdsView';
+import { MetaFeedbackView }   from './components/views/MetaFeedbackView';
 import { useGroups }       from './hooks/useGroups';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -25,6 +26,7 @@ export type ActiveView =
   | { type: 'vip' }
   | { type: 'data-entry' }
   | { type: 'meta-ads' }
+  | { type: 'meta-feedback' }
   | { type: 'store'; storeId: string };
 
 const SESSION_KEY = 'aure_access';
@@ -117,7 +119,8 @@ export default function App() {
     : activeView.type === 'criativos'   ? 'Inteligência de Criativos'
     : activeView.type === 'vip'         ? 'Gerador VIP'
     : activeView.type === 'data-entry'  ? 'Lançar Resultado'
-    : activeView.type === 'meta-ads'    ? 'Meta Ads'
+    : activeView.type === 'meta-ads'      ? 'Meta Ads'
+    : activeView.type === 'meta-feedback' ? 'Feedbacks Meta'
     : activeView.type === 'consolidado' ? (activeGroup?.name ?? '')
     : activeView.type === 'ranking'     ? 'Ranking'
     : activeStore?.name ?? '—';
@@ -127,7 +130,7 @@ export default function App() {
     if (!isMaster && ['atendimento', 'criativos', 'vip'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
-    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads')) {
+    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback')) {
       setActiveView({ type: 'home' });
     }
   }, [isMaster, isStaff, activeView.type]);
@@ -201,6 +204,11 @@ export default function App() {
               {/* Lançar resultado — master e staff */}
               {(isMaster || isStaff) && activeView.type === 'data-entry' && (
                 <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
+              )}
+
+              {/* Feedbacks Meta — master e staff */}
+              {(isMaster || isStaff) && activeView.type === 'meta-feedback' && (
+                <MetaFeedbackView />
               )}
 
 
