@@ -53,8 +53,57 @@ const DISPLAY_NAMES: Record<string, string> = {
   'sergios':             "Sergio's",
 };
 
-// Contas que compartilham o mesmo ID — gerar feedback apenas uma vez
-const SKIP_DUPLICATES = new Set(['vh-bosque', 'lupo-ponta-negra', 'lupo-sumauma']);
+// Contas com múltiplas lojas: cada loja filtra por keyword no nome de campanha
+// Padrão dos clientes: [PONTA NEGRA], [SUMAUMA], [MANAUARA], [BOSQUE], [BOULEVARD]
+const MULTI_STORE_GROUPS = [
+  {
+    accountId: META_ACCOUNTS['lupo-manauara'], // act_1908312336258416
+    stores: [
+      { key: 'lupo-manauara',    name: 'Lupo Manauara',    nameFilter: 'MANAUARA'    },
+      { key: 'lupo-ponta-negra', name: 'Lupo Ponta Negra', nameFilter: 'PONTA NEGRA' },
+      { key: 'lupo-sumauma',     name: 'Lupo Sumaúma',     nameFilter: 'SUMAUMA'     },
+    ],
+  },
+  {
+    accountId: META_ACCOUNTS['vh-boulevard'], // act_739663585617111
+    stores: [
+      { key: 'vh-boulevard', name: 'Victor Hugo Boulevard', nameFilter: 'BOULEVARD' },
+      { key: 'vh-bosque',    name: 'Victor Hugo Bosque',    nameFilter: 'BOSQUE'    },
+    ],
+  },
+];
+
+const MULTI_STORE_KEYS = new Set(
+  MULTI_STORE_GROUPS.flatMap(g => g.stores.map(s => s.key)),
+);
+
+interface StoreEntry {
+  key:         string;
+  name:        string;
+  accountId:   string;
+  nameFilter?: string;
+}
+
+// Lojas de conta única
+const SINGLE_STORE_ENTRIES: StoreEntry[] = Object.entries(META_ACCOUNTS)
+  .filter(([key]) => !MULTI_STORE_KEYS.has(key))
+  .map(([key, accountId]) => ({
+    key,
+    name: DISPLAY_NAMES[key] ?? key,
+    accountId,
+  }));
+
+// Lojas de conta compartilhada (com filtro por nome de campanha)
+const MULTI_STORE_ENTRIES: StoreEntry[] = MULTI_STORE_GROUPS.flatMap(g =>
+  g.stores.map(s => ({ ...s, accountId: g.accountId })),
+);
+
+const ALL_STORES: StoreEntry[] = [
+  ...SINGLE_STORE_ENTRIES,
+  ...MULTI_STORE_ENTRIES,
+].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+// ─── Formatação ───────────────────────────────────────────────────────────────
 
 type StoreState =
   | { status: 'idle' }
@@ -107,20 +156,7 @@ function buildMessage(name: string, data: FeedbackData): string {
   return lines.join('\n');
 }
 
-interface StoreEntry {
-  key: string;
-  name: string;
-  accountId: string;
-}
-
-const ALL_STORES: StoreEntry[] = Object.entries(META_ACCOUNTS)
-  .filter(([key]) => !SKIP_DUPLICATES.has(key))
-  .map(([key, accountId]) => ({
-    key,
-    name: DISPLAY_NAMES[key] ?? key,
-    accountId,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+// ─── Componente ───────────────────────────────────────────────────────────────
 
 export function MetaFeedbackView() {
   const [states, setStates] = useState<Record<string, StoreState>>(() =>
@@ -138,9 +174,9 @@ export function MetaFeedbackView() {
     setStates(Object.fromEntries(ALL_STORES.map(s => [s.key, { status: 'loading' }])));
 
     await Promise.all(
-      ALL_STORES.map(async ({ key, accountId }) => {
+      ALL_STORES.map(async ({ key, accountId, nameFilter }) => {
         try {
-          const data = await getAccountFeedbackData(accountId);
+          const data = await getAccountFeedbackData(accountId, nameFilter);
           setStore(key, data ? { status: 'done', data } : { status: 'empty' });
         } catch (err: any) {
           setStore(key, { status: 'error', message: err?.message ?? 'Erro desconhecido' });
@@ -158,6 +194,7 @@ export function MetaFeedbackView() {
   };
 
   const doneCount  = ALL_STORES.filter(s => states[s.key]?.status === 'done').length;
+  const emptyCount = ALL_STORES.filter(s => states[s.key]?.status === 'empty').length;
   const errorCount = ALL_STORES.filter(s => states[s.key]?.status === 'error').length;
 
   return (
@@ -184,6 +221,7 @@ export function MetaFeedbackView() {
       {!running && doneCount > 0 && (
         <div className="flex gap-4 text-xs">
           <span className="text-green-400 font-bold">{doneCount} gerados</span>
+          {emptyCount > 0 && <span className="text-gray-500 font-bold">{emptyCount} sem gasto</span>}
           {errorCount > 0 && <span className="text-red-400 font-bold">{errorCount} com erro</span>}
         </div>
       )}
