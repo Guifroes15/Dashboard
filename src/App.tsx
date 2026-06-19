@@ -8,6 +8,8 @@ import { ConsolidadoView } from './components/views/Consolidado';
 import { StoreDetailView } from './components/views/StoreDetail';
 import { RankingView } from './components/views/RankingView';
 import { EmptyGroupView } from './components/views/EmptyGroupView';
+import { AccessGate, AccessState } from './components/views/AccessGate';
+import { AuthView }        from './components/views/AuthView';
 import { AtendimentoView } from './components/views/AtendimentoView';
 import { CriativosView }   from './components/views/CriativosView';
 import { VipView }         from './components/views/VipView';
@@ -15,8 +17,6 @@ import { DataEntryView }   from './components/views/DataEntryView';
 import { MetaAdsView }     from './components/views/MetaAdsView';
 import { MetaFeedbackView } from './components/views/MetaFeedbackView';
 import { UsersAdminView }  from './components/views/UsersAdminView';
-import { AuthView }        from './components/views/AuthView';
-import { AccessState }     from './components/views/AccessGate';
 import { useGroups }       from './hooks/useGroups';
 import { useAuth, profileToAccessState } from './hooks/useAuth';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,10 +34,20 @@ export type ActiveView =
   | { type: 'users' }
   | { type: 'store'; storeId: string };
 
+const SESSION_KEY = 'aure_access';
+
 export default function App() {
-  const { loading: authLoading, accessState, logout } = useAuth();
+  // Firebase Auth — para colegas que usam email/Google
+  const { loading: authLoading, accessState: firebaseAccess, logout: firebaseLogout } = useAuth();
+
+  // Senha local — para acessos hardcoded (Guilherme + equipe existente)
   const [localAccess, setLocalAccess] = useState<AccessState | null>(null);
-  const access = accessState ?? localAccess;
+
+  // Controla exibição da tela de cadastro/login Firebase
+  const [showAuthView, setShowAuthView] = useState(false);
+
+  // Combina os dois: Firebase tem prioridade se estiver ativo
+  const access = firebaseAccess ?? localAccess;
 
   const [activeGroupId, setActiveGroupId] = useState('');
   const [activeView, setActiveView]       = useState<ActiveView>({ type: 'home' });
@@ -53,6 +63,23 @@ export default function App() {
     root.classList.add(theme);
   }, [theme]);
 
+  // Restaura sessão de senha do sessionStorage
+  useEffect(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.groupId !== undefined && parsed.groupIds === undefined) {
+          parsed.groupIds = parsed.groupId === 'all' ? 'all' : [parsed.groupId as string];
+          delete parsed.groupId;
+        }
+        setLocalAccess(parsed as AccessState);
+      } catch {
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+    }
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
@@ -61,18 +88,27 @@ export default function App() {
     });
   };
 
+  // Login por senha (AccessGate)
+  const handlePasswordAccess = (state: AccessState) => {
+    setLocalAccess(state);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+  };
+
+  // Login por Firebase (AuthView)
   const handleFirebaseLogin = (profile: UserProfile) => {
     setLocalAccess(profileToAccessState(profile));
+    setShowAuthView(false);
   };
 
   const handleLogout = async () => {
-    await logout();
+    sessionStorage.removeItem(SESSION_KEY);
+    if (firebaseAccess) await firebaseLogout();
     setLocalAccess(null);
+    setShowAuthView(false);
     setActiveGroupId('');
     setActiveView({ type: 'home' });
   };
 
-  // Filtra grupos visíveis com base no perfil de acesso
   const visibleGroups: GroupData[] = access == null ? [] :
     access.groupIds === 'all'
       ? groups
@@ -114,7 +150,6 @@ export default function App() {
     : activeView.type === 'ranking'     ? 'Ranking'
     : activeStore?.name ?? '—';
 
-  // Protege views restritas
   useEffect(() => {
     if (!isMaster && ['atendimento', 'criativos', 'vip', 'users'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
@@ -124,22 +159,34 @@ export default function App() {
     }
   }, [isMaster, isStaff, activeView.type]);
 
-  // ── Loading (Firebase verificando sessão) ────────────────────────────────
+  // ── Firebase verificando sessão ───────────────────────────────────────────
   if (authLoading) {
     return (
       <div className="min-h-screen bg-brand-dark flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-gray-600 font-bold uppercase tracking-widest">Carregando…</span>
-        </div>
+        <div className="w-7 h-7 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   // ── Não autenticado ───────────────────────────────────────────────────────
-  if (!access) return <AuthView onLogin={handleFirebaseLogin} />;
+  if (!access) {
+    if (showAuthView) {
+      return (
+        <AuthView
+          onBack={() => setShowAuthView(false)}
+          onLogin={handleFirebaseLogin}
+        />
+      );
+    }
+    return (
+      <AccessGate
+        onAccess={handlePasswordAccess}
+        onCreateAccount={() => setShowAuthView(true)}
+      />
+    );
+  }
 
-  // ── Autenticado, mas sem grupos atribuídos ────────────────────────────────
+  // ── Autenticado via Firebase, mas sem grupos atribuídos ───────────────────
   if (!activeGroup) {
     return (
       <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center gap-6 px-4">
@@ -147,7 +194,7 @@ export default function App() {
           <div className="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mx-auto border border-brand-light">
             <Users className="w-7 h-7 text-gray-500" />
           </div>
-          <h2 className="text-xl font-bold text-white">Conta criada com sucesso!</h2>
+          <h2 className="text-xl font-bold text-white">Conta criada!</h2>
           <p className="text-sm text-gray-500 leading-relaxed">
             Seu acesso ainda não tem grupos atribuídos. O administrador vai liberar em breve.
           </p>
@@ -219,27 +266,22 @@ export default function App() {
                 <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} />
               )}
 
-              {/* Ferramentas IA — só master */}
               {isMaster && activeView.type === 'atendimento' && <AtendimentoView />}
               {isMaster && activeView.type === 'criativos'   && <CriativosView />}
               {isMaster && activeView.type === 'vip'         && <VipView />}
 
-              {/* Painel de usuários — só master */}
               {isMaster && activeView.type === 'users' && (
                 <UsersAdminView groups={groups} />
               )}
 
-              {/* Lançar resultado — master e staff */}
               {(isMaster || isStaff) && activeView.type === 'data-entry' && (
                 <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
               )}
 
-              {/* Feedbacks Meta — master e staff */}
               {(isMaster || isStaff) && activeView.type === 'meta-feedback' && (
                 <MetaFeedbackView />
               )}
 
-              {/* Dashboard */}
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}
               {activeView.type === 'consolidado' && activeGroup.stores.length > 0 && (
                 <ConsolidadoView group={activeGroup} onStoreClick={id => handleViewChange({ type: 'store', storeId: id })} />

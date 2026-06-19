@@ -62,9 +62,10 @@ export interface AccessState {
 
 interface Props {
   onAccess: (state: AccessState) => void;
+  onCreateAccount?: () => void;
 }
 
-export function AccessGate({ onAccess }: Props) {
+export function AccessGate({ onAccess, onCreateAccount }: Props) {
   const [senha, setSenha] = useState('');
   const [show, setShow]   = useState(false);
   const [erro, setErro]   = useState(false);
@@ -145,7 +146,18 @@ export function AccessGate({ onAccess }: Props) {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-800 mt-6">
+        {onCreateAccount && (
+          <div className="mt-5 text-center">
+            <button
+              onClick={onCreateAccount}
+              className="text-xs text-gray-600 hover:text-brand-purple2 transition-colors font-bold"
+            >
+              Entrar com conta Aure →
+            </button>
+          </div>
+        )}
+
+        <p className="text-center text-xs text-gray-800 mt-4">
           Não tem acesso? Entre em contato com a Aure Digital.
         </p>
       </div>
