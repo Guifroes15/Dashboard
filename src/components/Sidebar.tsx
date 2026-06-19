@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Target, Send } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -141,6 +141,26 @@ export function Sidebar({
                   <span className="text-sm font-bold">Gerador VIP</span>
                   <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-purple2 border border-brand-purple/25">IA</span>
                 </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Admin — só master */}
+        {isMaster && (
+          <div className="space-y-1">
+            <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">Administração</p>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => onViewChange({ type: 'users' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'users'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Users className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Usuários</span>
               </button>
             </div>
           </div>

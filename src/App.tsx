@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { GroupData, StoreData } from './types';
+import { Users } from 'lucide-react';
+import { GroupData, StoreData, UserProfile } from './types';
 import { Sidebar } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './components/views/HomeView';
@@ -7,14 +8,17 @@ import { ConsolidadoView } from './components/views/Consolidado';
 import { StoreDetailView } from './components/views/StoreDetail';
 import { RankingView } from './components/views/RankingView';
 import { EmptyGroupView } from './components/views/EmptyGroupView';
-import { AccessGate, AccessState } from './components/views/AccessGate';
 import { AtendimentoView } from './components/views/AtendimentoView';
 import { CriativosView }   from './components/views/CriativosView';
 import { VipView }         from './components/views/VipView';
 import { DataEntryView }   from './components/views/DataEntryView';
-import { MetaAdsView }        from './components/views/MetaAdsView';
-import { MetaFeedbackView }   from './components/views/MetaFeedbackView';
+import { MetaAdsView }     from './components/views/MetaAdsView';
+import { MetaFeedbackView } from './components/views/MetaFeedbackView';
+import { UsersAdminView }  from './components/views/UsersAdminView';
+import { AuthView }        from './components/views/AuthView';
+import { AccessState }     from './components/views/AccessGate';
 import { useGroups }       from './hooks/useGroups';
+import { useAuth, profileToAccessState } from './hooks/useAuth';
 import { motion, AnimatePresence } from 'motion/react';
 
 export type ActiveView =
@@ -27,12 +31,14 @@ export type ActiveView =
   | { type: 'data-entry' }
   | { type: 'meta-ads' }
   | { type: 'meta-feedback' }
+  | { type: 'users' }
   | { type: 'store'; storeId: string };
 
-const SESSION_KEY = 'aure_access';
-
 export default function App() {
-  const [access, setAccess]               = useState<AccessState | null>(null);
+  const { loading: authLoading, accessState, logout } = useAuth();
+  const [localAccess, setLocalAccess] = useState<AccessState | null>(null);
+  const access = accessState ?? localAccess;
+
   const [activeGroupId, setActiveGroupId] = useState('');
   const [activeView, setActiveView]       = useState<ActiveView>({ type: 'home' });
   const [theme, setTheme]                 = useState<'dark' | 'light'>(() => {
@@ -47,23 +53,6 @@ export default function App() {
     root.classList.add(theme);
   }, [theme]);
 
-  useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Migrar formato antigo: groupId (string) -> groupIds (array)
-        if (parsed.groupId !== undefined && parsed.groupIds === undefined) {
-          parsed.groupIds = parsed.groupId === 'all' ? 'all' : [parsed.groupId as string];
-          delete parsed.groupId;
-        }
-        setAccess(parsed as AccessState);
-      } catch {
-        sessionStorage.removeItem(SESSION_KEY);
-      }
-    }
-  }, []);
-
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
@@ -72,14 +61,13 @@ export default function App() {
     });
   };
 
-  const handleAccess = (state: AccessState) => {
-    setAccess(state);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+  const handleFirebaseLogin = (profile: UserProfile) => {
+    setLocalAccess(profileToAccessState(profile));
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    setAccess(null);
+  const handleLogout = async () => {
+    await logout();
+    setLocalAccess(null);
     setActiveGroupId('');
     setActiveView({ type: 'home' });
   };
@@ -119,15 +107,16 @@ export default function App() {
     : activeView.type === 'criativos'   ? 'Inteligência de Criativos'
     : activeView.type === 'vip'         ? 'Gerador VIP'
     : activeView.type === 'data-entry'  ? 'Lançar Resultado'
-    : activeView.type === 'meta-ads'      ? 'Meta Ads'
+    : activeView.type === 'meta-ads'    ? 'Meta Ads'
     : activeView.type === 'meta-feedback' ? 'Feedbacks Meta'
+    : activeView.type === 'users'       ? 'Usuários'
     : activeView.type === 'consolidado' ? (activeGroup?.name ?? '')
     : activeView.type === 'ranking'     ? 'Ranking'
     : activeStore?.name ?? '—';
 
   // Protege views restritas
   useEffect(() => {
-    if (!isMaster && ['atendimento', 'criativos', 'vip'].includes(activeView.type)) {
+    if (!isMaster && ['atendimento', 'criativos', 'vip', 'users'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
     if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback')) {
@@ -135,8 +124,43 @@ export default function App() {
     }
   }, [isMaster, isStaff, activeView.type]);
 
-  if (!access) return <AccessGate onAccess={handleAccess} />;
-  if (!activeGroup) return <AccessGate onAccess={handleAccess} />;
+  // ── Loading (Firebase verificando sessão) ────────────────────────────────
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-brand-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-gray-600 font-bold uppercase tracking-widest">Carregando…</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Não autenticado ───────────────────────────────────────────────────────
+  if (!access) return <AuthView onLogin={handleFirebaseLogin} />;
+
+  // ── Autenticado, mas sem grupos atribuídos ────────────────────────────────
+  if (!activeGroup) {
+    return (
+      <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center gap-6 px-4">
+        <div className="text-center space-y-3 max-w-sm">
+          <div className="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mx-auto border border-brand-light">
+            <Users className="w-7 h-7 text-gray-500" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Conta criada com sucesso!</h2>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Seu acesso ainda não tem grupos atribuídos. O administrador vai liberar em breve.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="mt-2 px-5 py-2.5 rounded-xl bg-brand-light text-white text-xs font-bold hover:bg-brand-light/80 transition-all"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex min-h-screen bg-brand-dark text-white ${theme}`}>
@@ -168,7 +192,6 @@ export default function App() {
             <button
               onClick={toggleTheme}
               className="p-1 rounded-lg bg-brand-light border border-white/5 text-gray-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0"
-              title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
             >
               {theme === 'dark' ? (
                 <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -201,6 +224,11 @@ export default function App() {
               {isMaster && activeView.type === 'criativos'   && <CriativosView />}
               {isMaster && activeView.type === 'vip'         && <VipView />}
 
+              {/* Painel de usuários — só master */}
+              {isMaster && activeView.type === 'users' && (
+                <UsersAdminView groups={groups} />
+              )}
+
               {/* Lançar resultado — master e staff */}
               {(isMaster || isStaff) && activeView.type === 'data-entry' && (
                 <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
@@ -210,7 +238,6 @@ export default function App() {
               {(isMaster || isStaff) && activeView.type === 'meta-feedback' && (
                 <MetaFeedbackView />
               )}
-
 
               {/* Dashboard */}
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}

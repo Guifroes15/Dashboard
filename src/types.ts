@@ -1,18 +1,19 @@
-export type UserRole = 'admin' | 'client';
+export type UserRole = 'admin' | 'staff' | 'client';
 
 export interface UserProfile {
   uid: string;
   email: string;
   role: UserRole;
-  groupId?: string; // Only for clients
   name: string;
+  groupIds?: string[] | 'all';
 }
 
 export const GROUPS_CONFIG = [
-  { id: 'yamcol', name: 'Grupo YAMCOL', color: '#7C3AED' },
-  { id: 'barbosa', name: 'Grupo Barbosa', color: '#3B82F6' },
+  { id: 'yamcol',    name: 'Grupo YAMCOL',    color: '#7C3AED' },
+  { id: 'barbosa',   name: 'Grupo Barbosa',   color: '#3B82F6' },
   { id: 'paralelas', name: 'Grupo Paralelas', color: '#10B981' },
-  { id: 'lupo', name: 'Grupo Lupo', color: '#EF4444' },
+  { id: 'lupo',      name: 'Grupo Lupo',      color: '#EF4444' },
+  { id: 'ferracini', name: 'Grupo Ferracini', color: '#F59E0B' },
 ];
 
 export interface MonthData {
