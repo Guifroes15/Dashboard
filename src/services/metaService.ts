@@ -108,3 +108,100 @@ export async function getCampaigns(
     };
   });
 }
+
+// ─── Feedback semanal ────────────────────────────────────────────────────────
+
+export interface FeedbackData {
+  dateStart: string;
+  dateStop:  string;
+  totalSpend: number;
+  mensagem: {
+    spend:        number;
+    mensagens:    number;
+    custoMensagem: number;
+  } | null;
+  secundaria: {
+    tipo:              'impulsionamento' | 'reconhecimento';
+    spend:             number;
+    visitasPerfil:     number;
+    custoVisita:       number;
+    pessoasAlcancadas: number;
+  } | null;
+}
+
+// Objetivos que indicam campanha de reconhecimento/alcance
+const RECONHECIMENTO_OBJ = new Set([
+  'REACH', 'BRAND_AWARENESS', 'OUTCOME_AWARENESS',
+]);
+
+export async function getAccountFeedbackData(
+  adAccountId: string,
+): Promise<FeedbackData | null> {
+  const insFields = 'spend,reach,actions,cost_per_action_type,date_start,date_stop';
+  const fields    = `id,name,objective,effective_status,insights.date_preset(last_7d){${insFields}}`;
+  const url = `${BASE}/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=20&access_token=${TOKEN}`;
+  const json = await apiFetch(url);
+
+  // Apenas campanhas com gasto no período
+  const active = (json.data ?? []).filter(
+    (c: any) => parseFloat(c.insights?.data?.[0]?.spend ?? '0') > 0,
+  );
+  if (active.length === 0) return null;
+
+  const firstIns   = active[0].insights?.data?.[0];
+  const dateStart  = firstIns?.date_start ?? '';
+  const dateStop   = firstIns?.date_stop  ?? '';
+
+  let totalSpend       = 0;
+  let mensagemSpend    = 0;
+  let totalMensagens   = 0;
+  let secundariaSpend  = 0;
+  let totalLinkClicks  = 0;
+  let totalReach       = 0;
+  let tipoSecundaria: 'impulsionamento' | 'reconhecimento' | null = null;
+
+  for (const c of active) {
+    const ins      = c.insights?.data?.[0];
+    const spend    = parseFloat(ins?.spend ?? '0');
+    const mensagens = action(ins?.actions, 'onsite_conversion.messaging_conversation_started_7d');
+    // profile visit pode vir como visit_instagram_profile ou link_click
+    const visitasPerfil = action(ins?.actions, 'visit_instagram_profile')
+      || action(ins?.actions, 'link_click');
+    const reach    = parseInt(ins?.reach ?? '0', 10);
+    const obj      = (c.objective ?? '').toUpperCase();
+
+    totalSpend += spend;
+
+    // Campanha de mensagens: tem conversas iniciadas OU objetivo MESSAGES
+    const isMensagem = mensagens > 0 || obj === 'MESSAGES';
+
+    if (isMensagem) {
+      mensagemSpend  += spend;
+      totalMensagens += mensagens;
+    } else {
+      secundariaSpend += spend;
+      if (RECONHECIMENTO_OBJ.has(obj)) {
+        tipoSecundaria = 'reconhecimento';
+        totalReach    += reach;
+      } else {
+        tipoSecundaria  = 'impulsionamento';
+        totalLinkClicks += visitasPerfil;
+      }
+    }
+  }
+
+  const custoMensagem = totalMensagens > 0 ? mensagemSpend / totalMensagens : 0;
+  const custoVisita   = totalLinkClicks > 0 ? secundariaSpend / totalLinkClicks : 0;
+
+  return {
+    dateStart,
+    dateStop,
+    totalSpend,
+    mensagem: mensagemSpend > 0 || totalMensagens > 0
+      ? { spend: mensagemSpend, mensagens: totalMensagens, custoMensagem }
+      : null,
+    secundaria: secundariaSpend > 0 && tipoSecundaria
+      ? { tipo: tipoSecundaria, spend: secundariaSpend, visitasPerfil: totalLinkClicks, custoVisita, pessoasAlcancadas: totalReach }
+      : null,
+  };
+}

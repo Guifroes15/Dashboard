@@ -9,6 +9,7 @@ export const META_ACCOUNTS: Record<string, string> = {
   'vh-bosque':      'act_739663585617111', // mesma conta
   'vh-fortaleza':   'act_1497630464987005',
   'vh-ribeirao':    'act_1513320246332787',
+  'vh-manauara':    'act_987229157329989',
   'osklen-manaus':  'act_1932980590891353',
   'osklen-pvh':     'act_1328386968672119',
   'plie':           'act_1640020353363366',
@@ -39,4 +40,15 @@ export const META_ACCOUNTS: Record<string, string> = {
   'lupo-sao-caetano':  'act_1673371776754441',
   'lupo-sports':       'act_1845155085964818',
   'lupo-sumauma':      'act_1908312336258416', // mesma conta (Manauara/Ponta Negra/Sumaúma)
+
+  // Clientes avulsos
+  'amo-outlet':          'act_454683831725906',
+  'anjo-colours':        'act_1147859020455957',
+  'b201':                'act_1402987621169330',
+  'carrano':             'act_1495252901655411',
+  'democrata-rio-verde': 'act_1366988761930824',
+  'guapa':               'act_762506169917049',
+  'kipasso':             'act_623245078750813',
+  'mega-calcados':       'act_1554142619144234',
+  'sergios':             'act_1310366007107010',
 };

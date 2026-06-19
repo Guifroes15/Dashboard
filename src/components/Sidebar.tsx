@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Target } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Target, Send } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -161,6 +161,18 @@ export function Sidebar({
               >
                 <PlusCircle className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Lançar Resultado</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange({ type: 'meta-feedback' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'meta-feedback'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Send className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Feedbacks Meta</span>
               </button>
             </div>
           </div>
