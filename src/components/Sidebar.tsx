@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Target } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -146,6 +146,26 @@ export function Sidebar({
           </div>
         )}
 
+        {/* Admin — só master */}
+        {isMaster && (
+          <div className="space-y-1">
+            <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">Administração</p>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => onViewChange({ type: 'users' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'users'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Users className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Usuários</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Operações — master e staff */}
         {(isMaster || isStaff) && (
           <div className="space-y-1">
@@ -161,6 +181,18 @@ export function Sidebar({
               >
                 <PlusCircle className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Lançar Resultado</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange({ type: 'meta-feedback' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'meta-feedback'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Send className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Feedbacks Meta</span>
               </button>
             </div>
           </div>
