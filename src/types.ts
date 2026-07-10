@@ -34,6 +34,14 @@ export interface PlanItem {
   status: 'Alta' | 'Média' | 'Baixa' | 'Sucesso' | 'Teste';
 }
 
+export interface OtimizacaoItem {
+  id: string;
+  data: string;      // YYYY-MM-DD — data em que a otimização foi feita (pode ser retroativa)
+  descricao: string; // o que foi mudado (ex: "Aumentei orçamento de R$50 pra R$80 na campanha X")
+  autor: string;      // nome de quem registrou
+  criadoEm: string;   // timestamp ISO de quando foi lançado no sistema
+}
+
 export interface StoreData {
   id: string;
   name: string;
@@ -41,6 +49,7 @@ export interface StoreData {
   fee?: number;
   historico: MonthData[];
   planos: PlanItem[];
+  otimizacoes?: OtimizacaoItem[];
 }
 
 export interface GroupData {

@@ -10,7 +10,8 @@ import { ProjecaoCard } from '../ui/ProjecaoCard';
 import { RoiPanel } from '../ui/RoiPanel';
 import { MonthFilter } from '../ui/MonthFilter';
 import { SimuladorView } from './SimuladorView';
-import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users } from 'lucide-react';
+import { OtimizacoesView } from './OtimizacoesView';
+import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users, Wrench } from 'lucide-react';
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 import { useGestao } from '../../hooks/useGestao';
 import { META_ACCOUNTS } from '../../config/metaAccounts';
@@ -23,8 +24,9 @@ interface Props {
   isMaster?: boolean;
   isStaff?: boolean;
   groupId?: string;
+  nome?: string;
 }
-type Tab = 'visao' | 'simulador' | 'meta-ads';
+type Tab = 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes';
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'text-green-400 bg-green-400/10', PAUSED: 'text-yellow-400 bg-yellow-400/10', ARCHIVED: 'text-gray-500 bg-gray-500/10',
@@ -55,7 +57,7 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '' }: Props) {
+export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '', nome = '' }: Props) {
   const [tab, setTab] = useState<Tab>('visao');
   const [showFilter, setShowFilter] = useState(false);
 
@@ -226,6 +228,9 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
               <Target className="w-3.5 h-3.5" />Meta Ads
             </button>
           )}
+          <button onClick={() => setTab('otimizacoes')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'otimizacoes' ? 'bg-brand-light text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
+            <Wrench className="w-3.5 h-3.5" />Otimizações
+          </button>
         </div>
 
         {tab === 'visao' && (
@@ -571,6 +576,13 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
               </div>
             </motion.div>
           )}
+        </motion.div>
+      )}
+
+      {/* ── ABA OTIMIZAÇÕES ── */}
+      {tab === 'otimizacoes' && (
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          <OtimizacoesView store={store} groupId={groupId} podeEditar={isMaster || isStaff} nome={nome} />
         </motion.div>
       )}
     </motion.div>

@@ -308,6 +308,7 @@ export default function App() {
                   isMaster={isMaster}
                   isStaff={isStaff}
                   groupId={activeGroupId}
+                  nome={nomeUsuario}
                 />
               )}
             </motion.div>

@@ -7,7 +7,7 @@ import {
   runTransaction,
   setDoc,
 } from 'firebase/firestore';
-import { GroupData, MonthData, StoreData } from '../types';
+import { GroupData, MonthData, OtimizacaoItem, StoreData } from '../types';
 
 const GROUP_ORDER = ['yamcol', 'barbosa', 'paralelas', 'lupo', 'ferracini'];
 
@@ -101,6 +101,46 @@ export async function addOrUpdateMonthData(
 
     const newStores = [...groupData.stores];
     newStores[storeIdx] = { ...store, historico: hist };
+    tx.update(groupRef, { stores: newStores });
+  });
+}
+
+export async function addOtimizacao(groupId: string, storeId: string, item: OtimizacaoItem): Promise<void> {
+  await ensureAuth();
+  const groupRef = doc(db, 'groups', groupId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(groupRef);
+    if (!snap.exists()) throw new Error('Grupo não encontrado');
+
+    const groupData = snap.data() as GroupData;
+    const storeIdx = groupData.stores.findIndex((s) => s.id === storeId);
+    if (storeIdx === -1) throw new Error('Loja não encontrada');
+
+    const store = groupData.stores[storeIdx];
+    const otimizacoes = [item, ...(store.otimizacoes ?? [])];
+
+    const newStores = [...groupData.stores];
+    newStores[storeIdx] = { ...store, otimizacoes };
+    tx.update(groupRef, { stores: newStores });
+  });
+}
+
+export async function deleteOtimizacao(groupId: string, storeId: string, itemId: string): Promise<void> {
+  await ensureAuth();
+  const groupRef = doc(db, 'groups', groupId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(groupRef);
+    if (!snap.exists()) throw new Error('Grupo não encontrado');
+
+    const groupData = snap.data() as GroupData;
+    const storeIdx = groupData.stores.findIndex((s) => s.id === storeId);
+    if (storeIdx === -1) throw new Error('Loja não encontrada');
+
+    const store = groupData.stores[storeIdx];
+    const otimizacoes = (store.otimizacoes ?? []).filter((o) => o.id !== itemId);
+
+    const newStores = [...groupData.stores];
+    newStores[storeIdx] = { ...store, otimizacoes };
     tx.update(groupRef, { stores: newStores });
   });
 }
