@@ -7,23 +7,67 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Groups — leitura pública (o acesso ao app já é protegido por senha),
-    // escrita permitida para qualquer um (MVP — restringir após adicionar auth)
+    // --- Helpers ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'admin';
+    }
+
+    function isMemberOfGroup(groupId) {
+      return isSignedIn() && (getUserData().groupId == groupId || isAdmin());
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Rules ---
+
+    // Groups — dados principais do dashboard (lojas, histórico, etc).
+    // Exige apenas uma sessão no Firebase Auth (o app cria uma sessão anônima
+    // automaticamente pra quem entra pela senha antiga) — autorização fina
+    // por grupo/loja continua sendo feita no próprio app (AccessState).
     match /groups/{groupId} {
-      allow read, write: if true;
+      allow read, write: if isSignedIn();
     }
 
     // Users
     match /users/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) &&
+                      incoming().keys().hasAll(['uid', 'email', 'name', 'role']) &&
+                      incoming().role in ['admin', 'client'] &&
+                      (incoming().role == 'admin' ? incoming().email == 'guilhermfroes@auredigital.com.br' : true);
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) &&
+                      incoming().role == existing().role; // Cannot change role
     }
 
-    // Helpers
-    function isAdmin() {
-      return request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    // Action Plans
+    match /groups/{groupId}/plans/{planId} {
+      allow read: if isMemberOfGroup(groupId);
+
+      allow create, update: if isMemberOfGroup(groupId) && isAdmin(); // Only admins can create/generate
+
+      // Allow clients to toggle manual tasks
+      allow update: if isMemberOfGroup(groupId) &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['manualTasks', 'updatedAt']) &&
+                      incoming().manualTasks.size() <= 50;
     }
   }
 }
