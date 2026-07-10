@@ -165,7 +165,9 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
               {store.name}
             </h1>
             <p className="text-xs text-gray-500">
-              {store.historico[0].mes} — {store.historico[store.historico.length - 1].mes}
+              {store.historico.length > 0
+                ? <>{store.historico[0].mes} — {store.historico[store.historico.length - 1].mes}</>
+                : 'Sem histórico lançado ainda'}
               {!hasFaturamento && <span className="ml-2 text-amber-700">· Sem faturamento da loja</span>}
               {!hasMensagens && <span className="ml-2 text-amber-700">· Sem dados de mensagens</span>}
             </p>

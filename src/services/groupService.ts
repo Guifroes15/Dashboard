@@ -2,11 +2,12 @@ import { db } from '../lib/firebase';
 import {
   collection,
   doc,
+  getDoc,
   onSnapshot,
   runTransaction,
   setDoc,
 } from 'firebase/firestore';
-import { GroupData, MonthData } from '../types';
+import { GroupData, MonthData, StoreData } from '../types';
 
 const GROUP_ORDER = ['yamcol', 'barbosa', 'paralelas', 'lupo', 'ferracini'];
 
@@ -34,6 +35,26 @@ export async function seedGroupsToFirestore(groups: GroupData[]): Promise<void> 
   for (const group of groups) {
     await setDoc(doc(db, 'groups', group.id), group);
   }
+}
+
+export async function addStore(groupId: string, store: StoreData): Promise<void> {
+  const groupRef = doc(db, 'groups', groupId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(groupRef);
+    if (!snap.exists()) throw new Error('Grupo não encontrado');
+
+    const groupData = snap.data() as GroupData;
+    if (groupData.stores.some((s) => s.id === store.id)) return; // já existe
+
+    tx.update(groupRef, { stores: [...groupData.stores, store] });
+  });
+}
+
+export async function createGroupIfMissing(group: GroupData): Promise<void> {
+  const groupRef = doc(db, 'groups', group.id);
+  const snap = await getDoc(groupRef);
+  if (snap.exists()) return;
+  await setDoc(groupRef, group);
 }
 
 export async function deleteStore(groupId: string, storeId: string): Promise<void> {

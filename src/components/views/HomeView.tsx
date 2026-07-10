@@ -6,6 +6,19 @@ import { TrendingUp, TrendingDown, Minus, ArrowRight, Store, AlertTriangle, Chec
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
+import { addStore, createGroupIfMissing } from '../../services/groupService';
+
+// Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
+const YAMCOL_EXTRA_STORE = { groupId: 'yamcol', id: 'vh-manauara', name: 'VH Manauara', color: '#0ea5e9' };
+const AVULSOS_GROUP = { id: 'avulsos', name: 'Clientes Avulsos', color: '#64748b' };
+const AVULSOS_STORES = [
+  { id: 'amo-outlet',          name: 'Amo Outlet',          color: '#f97316' },
+  { id: 'anjo-colours',        name: 'Anjo Colours',        color: '#ec4899' },
+  { id: 'carrano',             name: 'Carrano',             color: '#22c55e' },
+  { id: 'democrata-rio-verde', name: 'Democrata Rio Verde', color: '#3b82f6' },
+  { id: 'guapa',               name: 'Guapa',               color: '#a855f7' },
+  { id: 'mega-calcados',       name: 'Mega Calçados',       color: '#eab308' },
+];
 
 interface Props {
   groups: GroupData[];
@@ -40,9 +53,37 @@ function AccountCard({ account, metric, onNavigate }: { account: AccountOverview
 
 export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isStaff = false }: Props) {
   const [gestaoGrupo, setGestaoGrupo] = useState<GroupData | null>(null);
+  const [settingUp, setSettingUp] = useState(false);
   const gestao = useGestao();
   const podeVerMeta = isMaster || isStaff;
   const { accounts: metaAccounts } = useMetaAccountsOverview(podeVerMeta ? groups : []);
+
+  const allStoreIds = new Set(groups.flatMap(g => g.stores.map(s => s.id)));
+  const missingYamcolExtra = isMaster && !allStoreIds.has(YAMCOL_EXTRA_STORE.id);
+  const missingAvulsos = isMaster ? AVULSOS_STORES.filter(s => !allStoreIds.has(s.id)) : [];
+  const hasPendingSetup = missingYamcolExtra || missingAvulsos.length > 0;
+
+  const handleSetupAvulsos = async () => {
+    setSettingUp(true);
+    try {
+      if (missingYamcolExtra) {
+        await addStore(YAMCOL_EXTRA_STORE.groupId, {
+          id: YAMCOL_EXTRA_STORE.id, name: YAMCOL_EXTRA_STORE.name, color: YAMCOL_EXTRA_STORE.color,
+          historico: [], planos: [],
+        });
+      }
+      if (missingAvulsos.length > 0) {
+        await createGroupIfMissing({ id: AVULSOS_GROUP.id, name: AVULSOS_GROUP.name, color: AVULSOS_GROUP.color, fee: 0, stores: [] });
+        for (const s of missingAvulsos) {
+          await addStore(AVULSOS_GROUP.id, { id: s.id, name: s.name, color: s.color, historico: [], planos: [] });
+        }
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao adicionar contas');
+    } finally {
+      setSettingUp(false);
+    }
+  };
 
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -110,6 +151,22 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
           </div>
         ))}
       </div>
+
+      {/* Configuração pendente — contas do Meta ainda sem loja no dashboard */}
+      {hasPendingSetup && (
+        <div className="mb-8 bg-brand-purple/10 border border-brand-purple/30 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-xs font-bold text-brand-purple2 uppercase tracking-wider mb-1">Configuração pendente</p>
+            <p className="text-xs text-gray-400">
+              {missingAvulsos.length + (missingYamcolExtra ? 1 : 0)} conta{missingAvulsos.length + (missingYamcolExtra ? 1 : 0) > 1 ? 's' : ''} do Meta Ads ainda não {missingAvulsos.length + (missingYamcolExtra ? 1 : 0) > 1 ? 'aparecem' : 'aparece'} no dashboard (VH Manauara e clientes avulsos).
+            </p>
+          </div>
+          <button onClick={handleSetupAvulsos} disabled={settingUp}
+            className="px-4 py-2 rounded-lg bg-brand-purple text-white text-xs font-bold hover:bg-brand-purple/90 transition-all disabled:opacity-50 cursor-pointer shrink-0">
+            {settingUp ? 'Adicionando…' : 'Adicionar ao dashboard'}
+          </button>
+        </div>
+      )}
 
       {/* Saldo baixo — precisa de atenção */}
       {podeVerMeta && saldoBaixo.length > 0 && (
