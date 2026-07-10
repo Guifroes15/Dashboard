@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { UserProfile } from '../types';
@@ -38,6 +38,15 @@ export function useAuth() {
       if (!user) {
         setAccess(null);
         setProfile(null);
+        setLoading(false);
+        // Autentica anonimamente em segundo plano — necessário pra escrever no Firestore
+        // (login por senha antiga não usa Firebase Auth, então request.auth ficaria nulo).
+        signInAnonymously(auth).catch(() => {
+          // Anonymous sign-in pode estar desabilitado no console do Firebase — ignora.
+        });
+        return;
+      }
+      if (user.isAnonymous) {
         setLoading(false);
         return;
       }
