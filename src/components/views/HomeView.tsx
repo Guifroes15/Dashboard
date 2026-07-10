@@ -7,11 +7,10 @@ import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, GASTO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
 import { addStore, createGroupIfMissing } from '../../services/groupService';
-import { auth } from '../../lib/firebase';
 
 // Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
 const YAMCOL_EXTRA_STORE = { groupId: 'yamcol', id: 'vh-manauara', name: 'VH Manauara', color: '#0ea5e9' };
-const AVULSOS_GROUP = { id: 'avulsos', name: 'Clientes Avulsos', color: '#64748b' };
+// Cada uma vira seu próprio grupo (loja avulsa, sem agrupar sob um "Clientes Avulsos" compartilhado)
 const AVULSOS_STORES = [
   { id: 'amo-outlet',          name: 'Amo Outlet',          color: '#f97316' },
   { id: 'anjo-colours',        name: 'Anjo Colours',        color: '#ec4899' },
@@ -52,9 +51,16 @@ function AccountCard({ account, metric, onNavigate }: { account: AccountOverview
   );
 }
 
+interface PendingItem {
+  key: string;
+  label: string;
+  add: () => Promise<void>;
+}
+
 export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isStaff = false }: Props) {
   const [gestaoGrupo, setGestaoGrupo] = useState<GroupData | null>(null);
-  const [settingUp, setSettingUp] = useState(false);
+  const [addingKey, setAddingKey] = useState<string | null>(null);
+  const [errorByKey, setErrorByKey] = useState<Record<string, string>>({});
   const gestao = useGestao();
   const podeVerMeta = isMaster || isStaff;
   const { accounts: metaAccounts } = useMetaAccountsOverview(podeVerMeta ? groups : []);
@@ -62,30 +68,42 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
   const allStoreIds = new Set(groups.flatMap(g => g.stores.map(s => s.id)));
   const missingYamcolExtra = isMaster && !allStoreIds.has(YAMCOL_EXTRA_STORE.id);
   const missingAvulsos = isMaster ? AVULSOS_STORES.filter(s => !allStoreIds.has(s.id)) : [];
-  const hasPendingSetup = missingYamcolExtra || missingAvulsos.length > 0;
 
-  const handleSetupAvulsos = async () => {
-    setSettingUp(true);
+  const pendingItems: PendingItem[] = [
+    ...(missingYamcolExtra ? [{
+      key: YAMCOL_EXTRA_STORE.id,
+      label: `${YAMCOL_EXTRA_STORE.name} (Grupo Yamcol)`,
+      add: () => addStore(YAMCOL_EXTRA_STORE.groupId, {
+        id: YAMCOL_EXTRA_STORE.id, name: YAMCOL_EXTRA_STORE.name, color: YAMCOL_EXTRA_STORE.color,
+        historico: [], planos: [],
+      }),
+    }] : []),
+    ...missingAvulsos.map(s => ({
+      key: s.id,
+      label: s.name,
+      // Cada avulsa vira seu próprio grupo com uma única loja — tudo num write só.
+      add: () => createGroupIfMissing({
+        id: s.id, name: s.name, color: s.color, fee: 0,
+        stores: [{ id: s.id, name: s.name, color: s.color, historico: [], planos: [] }],
+      }),
+    })),
+  ];
+
+  const handleAddOne = async (item: PendingItem) => {
+    setAddingKey(item.key);
+    setErrorByKey(prev => {
+      const next = { ...prev };
+      delete next[item.key];
+      return next;
+    });
     try {
-      if (missingYamcolExtra) {
-        await addStore(YAMCOL_EXTRA_STORE.groupId, {
-          id: YAMCOL_EXTRA_STORE.id, name: YAMCOL_EXTRA_STORE.name, color: YAMCOL_EXTRA_STORE.color,
-          historico: [], planos: [],
-        });
-      }
-      if (missingAvulsos.length > 0) {
-        await createGroupIfMissing({ id: AVULSOS_GROUP.id, name: AVULSOS_GROUP.name, color: AVULSOS_GROUP.color, fee: 0, stores: [] });
-        for (const s of missingAvulsos) {
-          await addStore(AVULSOS_GROUP.id, { id: s.id, name: s.name, color: s.color, historico: [], planos: [] });
-        }
-      }
+      await item.add();
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      const authInfo = auth.currentUser ? `auth: ${auth.currentUser.isAnonymous ? 'anônimo' : 'logado'}` : 'auth: sem sessão';
-      const message = err instanceof Error ? err.message : 'Erro ao adicionar contas';
-      alert(`${message}${code ? ` (${code})` : ''} — ${authInfo}`);
+      const message = err instanceof Error ? err.message : 'Erro ao adicionar';
+      setErrorByKey(prev => ({ ...prev, [item.key]: `${message}${code ? ` (${code})` : ''}` }));
     } finally {
-      setSettingUp(false);
+      setAddingKey(null);
     }
   };
 
@@ -158,19 +176,29 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
         ))}
       </div>
 
-      {/* Configuração pendente — contas do Meta ainda sem loja no dashboard */}
-      {hasPendingSetup && (
-        <div className="mb-8 bg-brand-purple/10 border border-brand-purple/30 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <p className="text-xs font-bold text-brand-purple2 uppercase tracking-wider mb-1">Configuração pendente</p>
-            <p className="text-xs text-gray-400">
-              {missingAvulsos.length + (missingYamcolExtra ? 1 : 0)} conta{missingAvulsos.length + (missingYamcolExtra ? 1 : 0) > 1 ? 's' : ''} do Meta Ads ainda não {missingAvulsos.length + (missingYamcolExtra ? 1 : 0) > 1 ? 'aparecem' : 'aparece'} no dashboard (VH Manauara e clientes avulsos).
-            </p>
+      {/* Configuração pendente — contas do Meta ainda sem loja no dashboard, adicionadas uma por uma */}
+      {pendingItems.length > 0 && (
+        <div className="mb-8 bg-brand-purple/10 border border-brand-purple/30 rounded-xl p-4">
+          <p className="text-xs font-bold text-brand-purple2 uppercase tracking-wider mb-1">Configuração pendente</p>
+          <p className="text-xs text-gray-400 mb-3">
+            {pendingItems.length} conta{pendingItems.length > 1 ? 's' : ''} do Meta Ads ainda {pendingItems.length > 1 ? 'não aparecem' : 'não aparece'} no dashboard.
+          </p>
+          <div className="space-y-2">
+            {pendingItems.map(item => (
+              <div key={item.key} className="flex items-center justify-between gap-3 bg-brand-dark/30 rounded-lg px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white truncate">{item.label}</p>
+                  {errorByKey[item.key] && (
+                    <p className="text-[10px] text-red-400 mt-0.5">{errorByKey[item.key]}</p>
+                  )}
+                </div>
+                <button onClick={() => handleAddOne(item)} disabled={addingKey === item.key}
+                  className="px-3 py-1.5 rounded-lg bg-brand-purple text-white text-[11px] font-bold hover:bg-brand-purple/90 transition-all disabled:opacity-50 cursor-pointer shrink-0">
+                  {addingKey === item.key ? 'Adicionando…' : 'Adicionar'}
+                </button>
+              </div>
+            ))}
           </div>
-          <button onClick={handleSetupAvulsos} disabled={settingUp}
-            className="px-4 py-2 rounded-lg bg-brand-purple text-white text-xs font-bold hover:bg-brand-purple/90 transition-all disabled:opacity-50 cursor-pointer shrink-0">
-            {settingUp ? 'Adicionando…' : 'Adicionar ao dashboard'}
-          </button>
         </div>
       )}
 
