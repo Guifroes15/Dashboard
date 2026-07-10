@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-import { Copy, Check, Sparkles, Sun, AlertCircle } from 'lucide-react';
+import { Copy, Check, Sparkles, Sun, Calendar, AlertCircle } from 'lucide-react';
 import { GroupData } from '../../types';
 import { buildUniqueAccounts } from '../../hooks/useMetaAccountsOverview';
 import { getAccountBalance, getAccountTimeSeries } from '../../services/metaService';
-import { generateDailySummary, DailyAccountPayload } from '../../services/aiService';
+import { generateDailySummary, DailyAccountPayload, SummaryPeriod } from '../../services/aiService';
 
 interface Props { groups: GroupData[] }
 
-function ontemFormatado(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+const fmtCurta = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+function periodoLabel(periodo: SummaryPeriod): string {
+  const ontem = new Date();
+  ontem.setDate(ontem.getDate() - 1);
+  if (periodo === 'ontem') return fmtCurta(ontem);
+
+  const seteDiasAtras = new Date();
+  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+  return `${fmtCurta(seteDiasAtras)} a ${fmtCurta(ontem)}`;
 }
 
 async function buildPayload(groups: GroupData[]): Promise<DailyAccountPayload[]> {
@@ -47,6 +53,7 @@ async function buildPayload(groups: GroupData[]): Promise<DailyAccountPayload[]>
 }
 
 export function DailySummaryView({ groups }: Props) {
+  const [periodo, setPeriodo] = useState<SummaryPeriod>('ontem');
   const [phase, setPhase] = useState<'idle' | 'fetching' | 'thinking' | 'done' | 'error'>('idle');
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
@@ -63,7 +70,7 @@ export function DailySummaryView({ groups }: Props) {
         return;
       }
       setPhase('thinking');
-      const text = await generateDailySummary(payload, ontemFormatado());
+      const text = await generateDailySummary(payload, periodo, periodoLabel(periodo));
       setSummary(text);
       setPhase('done');
     } catch (err) {
@@ -82,14 +89,29 @@ export function DailySummaryView({ groups }: Props) {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Sun className="w-6 h-6 text-amber-400" /> Resumo Diário
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Briefing executivo de ontem em todas as contas, comparando com os últimos dias.
-          </p>
+      <div>
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Sun className="w-6 h-6 text-amber-400" /> Resumo Diário
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Briefing executivo de todas as contas, comparando com o período anterior.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex gap-1 bg-brand-medium border border-brand-light rounded-xl p-1">
+          <button
+            onClick={() => setPeriodo('ontem')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${periodo === 'ontem' ? 'bg-brand-purple text-white' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            <Calendar className="w-3.5 h-3.5" /> Ontem
+          </button>
+          <button
+            onClick={() => setPeriodo('7d')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${periodo === '7d' ? 'bg-brand-purple text-white' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            <Calendar className="w-3.5 h-3.5" /> Últimos 7 dias
+          </button>
         </div>
         <button
           onClick={generate}
@@ -136,7 +158,7 @@ export function DailySummaryView({ groups }: Props) {
 
       {phase === 'idle' && (
         <div className="text-center py-16 text-gray-600">
-          <p className="text-sm">Clique em "Gerar Resumo" pra analisar o dia anterior de todas as contas.</p>
+          <p className="text-sm">Escolha o período e clique em "Gerar Resumo" pra analisar todas as contas.</p>
         </div>
       )}
     </div>
