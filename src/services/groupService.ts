@@ -1,4 +1,4 @@
-import { db } from '../lib/firebase';
+import { db, ensureAuth } from '../lib/firebase';
 import {
   collection,
   doc,
@@ -32,12 +32,14 @@ export function subscribeToGroups(
 }
 
 export async function seedGroupsToFirestore(groups: GroupData[]): Promise<void> {
+  await ensureAuth();
   for (const group of groups) {
     await setDoc(doc(db, 'groups', group.id), group);
   }
 }
 
 export async function addStore(groupId: string, store: StoreData): Promise<void> {
+  await ensureAuth();
   const groupRef = doc(db, 'groups', groupId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(groupRef);
@@ -51,6 +53,7 @@ export async function addStore(groupId: string, store: StoreData): Promise<void>
 }
 
 export async function createGroupIfMissing(group: GroupData): Promise<void> {
+  await ensureAuth();
   const groupRef = doc(db, 'groups', group.id);
   const snap = await getDoc(groupRef);
   if (snap.exists()) return;
@@ -58,6 +61,7 @@ export async function createGroupIfMissing(group: GroupData): Promise<void> {
 }
 
 export async function deleteStore(groupId: string, storeId: string): Promise<void> {
+  await ensureAuth();
   const groupRef = doc(db, 'groups', groupId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(groupRef);
@@ -74,6 +78,7 @@ export async function addOrUpdateMonthData(
   storeId: string,
   monthData: MonthData
 ): Promise<void> {
+  await ensureAuth();
   const groupRef = doc(db, 'groups', groupId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(groupRef);

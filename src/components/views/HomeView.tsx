@@ -7,6 +7,7 @@ import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, GASTO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
 import { addStore, createGroupIfMissing } from '../../services/groupService';
+import { auth } from '../../lib/firebase';
 
 // Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
 const YAMCOL_EXTRA_STORE = { groupId: 'yamcol', id: 'vh-manauara', name: 'VH Manauara', color: '#0ea5e9' };
@@ -79,7 +80,10 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
         }
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao adicionar contas');
+      const code = (err as { code?: string })?.code;
+      const authInfo = auth.currentUser ? `auth: ${auth.currentUser.isAnonymous ? 'anônimo' : 'logado'}` : 'auth: sem sessão';
+      const message = err instanceof Error ? err.message : 'Erro ao adicionar contas';
+      alert(`${message}${code ? ` (${code})` : ''} — ${authInfo}`);
     } finally {
       setSettingUp(false);
     }
