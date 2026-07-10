@@ -23,6 +23,7 @@ const CACHE_KEY = 'aure_meta_overview_v1';
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export const SALDO_BAIXO_LIMITE = 150; // R$ — abaixo disso, conta "precisa de atenção"
+export const GASTO_BAIXO_LIMITE = 50;  // R$ investidos nos últimos 7 dias — abaixo disso, conta "parada ou quase parada"
 
 function buildUniqueAccounts(groups: GroupData[]): Map<string, StoreRef[]> {
   const byAccount = new Map<string, StoreRef[]>();
