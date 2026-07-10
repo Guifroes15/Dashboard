@@ -83,85 +83,63 @@ function buildReport(raws: AccountRaw[], periodo: Periodo): string {
   const varGastoGeral = variacaoPct(totalGastoAtual, totalGastoAnterior);
   const varMsgGeral = variacaoPct(totalMsgAtual, totalMsgAnterior);
 
-  const semGastoOuSaldoBaixo = contas.filter(c => c.saldoBaixo || c.semGasto);
-  const quedaEficiencia = contas.filter(c =>
-    !c.saldoBaixo && !c.semGasto &&
-    ((c.variacaoMensagens !== null && c.variacaoMensagens <= QUEDA_ATENCAO) ||
+  const problemaSaldo = contas.filter(c => c.saldoBaixo);
+  const quedaResultado = contas.filter(c =>
+    !c.saldoBaixo &&
+    (c.semGasto ||
+     (c.variacaoMensagens !== null && c.variacaoMensagens <= QUEDA_ATENCAO) ||
      (c.variacaoCusto !== null && c.variacaoCusto >= ALTA_CUSTO_ATENCAO))
   );
-  const pontosAtencao = [...semGastoOuSaldoBaixo, ...quedaEficiencia];
 
-  const destaques = contas
-    .filter(c => !pontosAtencao.includes(c) && c.atual.mensagens > 0)
+  const melhorResultado = contas
+    .filter(c => !problemaSaldo.includes(c) && !quedaResultado.includes(c) && c.atual.mensagens > 0)
     .filter(c => (c.variacaoMensagens !== null && c.variacaoMensagens >= CRESCIMENTO_DESTAQUE) ||
                  (c.variacaoCusto !== null && c.variacaoCusto <= -CRESCIMENTO_DESTAQUE))
-    .sort((a, b) => (b.variacaoMensagens ?? 0) - (a.variacaoMensagens ?? 0))
-    .slice(0, 5);
+    .sort((a, b) => (b.variacaoMensagens ?? 0) - (a.variacaoMensagens ?? 0));
 
-  const estaveis = contas.filter(c => !pontosAtencao.includes(c) && !destaques.includes(c));
-
-  const custoSubindo = contas.filter(c => c.variacaoCusto !== null && c.variacaoCusto > 0).length;
-  const custoCaindo = contas.filter(c => c.variacaoCusto !== null && c.variacaoCusto < 0).length;
-
-  // Padrão por grupo: 2+ contas do mesmo grupo em pontos de atenção
-  const gruposComProblema = new Map<string, number>();
-  for (const c of pontosAtencao) {
-    for (const g of c.groupNames) gruposComProblema.set(g, (gruposComProblema.get(g) ?? 0) + 1);
-  }
-  const gruposRecorrentes = [...gruposComProblema.entries()].filter(([, n]) => n >= 2);
+  const estaveis = contas.filter(c => !problemaSaldo.includes(c) && !quedaResultado.includes(c) && !melhorResultado.includes(c));
 
   const titulo = periodo === 'ontem'
     ? `☀️ Resumo de Ontem (${periodoLabel(periodo)})`
     : `📅 Resumo dos Últimos 7 Dias (${periodoLabel(periodo)})`;
 
-  const lines: string[] = [titulo, ''];
+  const lines: string[] = [
+    titulo,
+    '',
+    `R$ ${fmtBRL(totalGastoAtual)} investidos${varGastoGeral !== null ? ` (${varGastoGeral >= 0 ? '+' : ''}${varGastoGeral.toFixed(0)}%)` : ''} · ${totalMsgAtual} mensagens${varMsgGeral !== null ? ` (${varMsgGeral >= 0 ? '+' : ''}${varMsgGeral.toFixed(0)}%)` : ''} · ${contas.length} contas`,
+  ];
 
-  lines.push('📈 Panorama Geral');
-  lines.push(
-    `R$ ${fmtBRL(totalGastoAtual)} investidos${varGastoGeral !== null ? ` (${varGastoGeral >= 0 ? '+' : ''}${varGastoGeral.toFixed(0)}% vs período anterior)` : ''}, ` +
-    `${totalMsgAtual} mensagens${varMsgGeral !== null ? ` (${varMsgGeral >= 0 ? '+' : ''}${varMsgGeral.toFixed(0)}%)` : ''} em ${contas.length} contas.`
-  );
-  if (pontosAtencao.length > 0) lines.push(`${pontosAtencao.length} conta${pontosAtencao.length > 1 ? 's' : ''} precisa${pontosAtencao.length > 1 ? 'm' : ''} de ação hoje.`);
+  if (problemaSaldo.length > 0) {
+    lines.push('', `💰 Problema de saldo (${problemaSaldo.length})`);
+    problemaSaldo
+      .slice().sort((a, b) => (a.saldoRestante ?? 0) - (b.saldoRestante ?? 0))
+      .forEach(c => lines.push(`- ${c.label} — R$ ${fmtBRL(c.saldoRestante!)} restante`));
+  }
 
-  if (destaques.length > 0) {
-    lines.push('', '🚀 Destaques Positivos');
-    for (const c of destaques) {
-      const partes: string[] = [];
-      if (c.variacaoMensagens !== null && c.variacaoMensagens >= CRESCIMENTO_DESTAQUE) partes.push(`+${c.variacaoMensagens.toFixed(0)}% em mensagens (${c.atual.mensagens})`);
-      if (c.variacaoCusto !== null && c.variacaoCusto <= -CRESCIMENTO_DESTAQUE) partes.push(`custo/msg caiu ${Math.abs(c.variacaoCusto).toFixed(0)}%`);
-      lines.push(`✅ ${c.label} — ${partes.join(', ')}`);
+  if (quedaResultado.length > 0) {
+    lines.push('', `📉 Queda de resultado (${quedaResultado.length})`);
+    for (const c of quedaResultado) {
+      const motivos: string[] = [];
+      if (c.semGasto) motivos.push('sem gasto no período');
+      if (c.variacaoMensagens !== null && c.variacaoMensagens <= QUEDA_ATENCAO) motivos.push(`mensagens caíram ${Math.abs(c.variacaoMensagens).toFixed(0)}%`);
+      if (c.variacaoCusto !== null && c.variacaoCusto >= ALTA_CUSTO_ATENCAO) motivos.push(`custo/msg subiu ${c.variacaoCusto.toFixed(0)}%`);
+      lines.push(`- ${c.label} — ${motivos.join(', ')}`);
     }
   }
 
-  if (pontosAtencao.length > 0) {
-    lines.push('', '⚠️ Pontos de Atenção');
-    for (const c of pontosAtencao) {
-      const motivos: string[] = [];
-      if (c.saldoBaixo) motivos.push(`saldo R$ ${fmtBRL(c.saldoRestante!)} restante`);
-      if (c.semGasto) motivos.push('sem gasto no período');
-      if (!c.saldoBaixo && !c.semGasto && c.variacaoMensagens !== null && c.variacaoMensagens <= QUEDA_ATENCAO) motivos.push(`mensagens caíram ${Math.abs(c.variacaoMensagens).toFixed(0)}%`);
-      if (!c.saldoBaixo && !c.semGasto && c.variacaoCusto !== null && c.variacaoCusto >= ALTA_CUSTO_ATENCAO) motivos.push(`custo/msg subiu ${c.variacaoCusto.toFixed(0)}%`);
-      lines.push(`⚠️ ${c.label} — ${motivos.join(', ')}`);
+  if (melhorResultado.length > 0) {
+    lines.push('', `🚀 Contas com melhor resultado (${melhorResultado.length})`);
+    for (const c of melhorResultado) {
+      const partes: string[] = [];
+      if (c.variacaoMensagens !== null && c.variacaoMensagens >= CRESCIMENTO_DESTAQUE) partes.push(`+${c.variacaoMensagens.toFixed(0)}% em mensagens (${c.atual.mensagens})`);
+      if (c.variacaoCusto !== null && c.variacaoCusto <= -CRESCIMENTO_DESTAQUE) partes.push(`custo/msg caiu ${Math.abs(c.variacaoCusto).toFixed(0)}%`);
+      lines.push(`- ${c.label} — ${partes.join(', ')}`);
     }
   }
 
   if (estaveis.length > 0) {
-    lines.push('', '➖ Contas Estáveis');
-    lines.push(`${estaveis.length} conta${estaveis.length > 1 ? 's seguem' : ' segue'} dentro da média, sem oscilação relevante: ${estaveis.map(c => c.label).join(', ')}.`);
-  }
-
-  lines.push('', '📊 Tendências da Operação');
-  lines.push(`Custo por mensagem: ${custoCaindo} conta${custoCaindo === 1 ? '' : 's'} caindo, ${custoSubindo} subindo.`);
-  if (gruposRecorrentes.length > 0) {
-    lines.push(`Atenção recorrente em: ${gruposRecorrentes.map(([g, n]) => `${g} (${n} contas)`).join(', ')}.`);
-  }
-
-  if (pontosAtencao.length > 0) {
-    lines.push('', `🎯 Prioridades para ${periodo === 'ontem' ? 'Hoje' : 'a Semana'}`);
-    pontosAtencao
-      .slice()
-      .sort((a, b) => (a.saldoRestante ?? Infinity) - (b.saldoRestante ?? Infinity))
-      .forEach((c, i) => lines.push(`${i + 1}. ${c.label}${c.saldoBaixo ? ' — recarregar saldo' : c.semGasto ? ' — verificar por que parou' : ' — investigar queda de eficiência'}`));
+    lines.push('', `➖ Contas estáveis (${estaveis.length})`);
+    lines.push(estaveis.map(c => c.label).join(', '));
   }
 
   return lines.join('\n');
