@@ -14,7 +14,8 @@ import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, 
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 import { useGestao } from '../../hooks/useGestao';
 import { META_ACCOUNTS } from '../../config/metaAccounts';
-import { DatePreset, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
+import { MetaDateRange, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
+import { DateRangePicker } from '../ui/DateRangePicker';
 
 interface Props {
   store: StoreData;
@@ -25,12 +26,6 @@ interface Props {
 }
 type Tab = 'visao' | 'simulador' | 'meta-ads';
 
-const DATE_PRESETS: { label: string; value: DatePreset }[] = [
-  { label: 'Últimos 7 dias',  value: 'last_7d'    },
-  { label: 'Últimos 30 dias', value: 'last_30d'   },
-  { label: 'Este mês',        value: 'this_month' },
-  { label: 'Mês passado',     value: 'last_month' },
-];
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'text-green-400 bg-green-400/10', PAUSED: 'text-yellow-400 bg-yellow-400/10', ARCHIVED: 'text-gray-500 bg-gray-500/10',
 };
@@ -68,7 +63,7 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
   const canSeeMetaAds = (isMaster || isStaff) && !!adAccountId;
 
   // Meta Ads state
-  const [metaDatePreset, setMetaDatePreset] = useState<DatePreset>('last_30d');
+  const [metaDateRange, setMetaDateRange]   = useState<MetaDateRange>({ preset: 'last_30d' });
   const [metaLoading, setMetaLoading]       = useState(false);
   const [metaError, setMetaError]           = useState<string | null>(null);
   const [metaInsights, setMetaInsights]     = useState<MetaInsights | null>(null);
@@ -80,9 +75,9 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
     setMetaLoading(true);
     setMetaError(null);
     Promise.all([
-      getAccountInsights(adAccountId, metaDatePreset),
-      getAccountTimeSeries(adAccountId, metaDatePreset),
-      getCampaigns(adAccountId, metaDatePreset),
+      getAccountInsights(adAccountId, metaDateRange),
+      getAccountTimeSeries(adAccountId, metaDateRange),
+      getCampaigns(adAccountId, metaDateRange),
     ])
       .then(([ins, ts, camps]) => {
         setMetaInsights(ins);
@@ -93,7 +88,7 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
       .finally(() => setMetaLoading(false));
   };
 
-  useEffect(() => { if (tab === 'meta-ads') loadMeta(); }, [tab, metaDatePreset, store.id]);
+  useEffect(() => { if (tab === 'meta-ads') loadMeta(); }, [tab, metaDateRange, store.id]);
 
   const gestao = useGestao();
   const storeGestate = gestao.getLoja(groupId, store.id, store.name);
@@ -461,17 +456,7 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
 
           {/* Filtro período */}
           <motion.div variants={itemVariants} className="flex items-center justify-between gap-3">
-            <div className="flex gap-1 bg-brand-medium border border-brand-light rounded-xl p-1">
-              {DATE_PRESETS.map(p => (
-                <button
-                  key={p.value}
-                  onClick={() => setMetaDatePreset(p.value)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${metaDatePreset === p.value ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <DateRangePicker value={metaDateRange} onChange={setMetaDateRange} />
             <button onClick={loadMeta} disabled={metaLoading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-brand-light rounded-lg px-3 py-2 transition-all disabled:opacity-40">
               <RefreshCw className={`w-3.5 h-3.5 ${metaLoading ? 'animate-spin' : ''}`} />
             </button>

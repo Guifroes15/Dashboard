@@ -1,7 +1,16 @@
 const BASE  = 'https://graph.facebook.com/v21.0';
 const TOKEN = import.meta.env.VITE_META_ACCESS_TOKEN as string;
 
-export type DatePreset = 'last_7d' | 'last_30d' | 'this_month' | 'last_month';
+export type DatePreset = 'today' | 'yesterday' | 'last_7d' | 'last_14d' | 'last_30d' | 'this_month' | 'last_month';
+
+// Período customizado (YYYY-MM-DD) ou um preset da Graph API
+export type MetaDateRange = { preset: DatePreset } | { since: string; until: string };
+
+function dateRangeParam(range: MetaDateRange): string {
+  return 'since' in range
+    ? `time_range=${encodeURIComponent(JSON.stringify({ since: range.since, until: range.until }))}`
+    : `date_preset=${range.preset}`;
+}
 
 export interface MetaInsights {
   spend:         number;
@@ -50,10 +59,10 @@ async function apiFetch(url: string) {
 
 export async function getAccountInsights(
   adAccountId: string,
-  datePreset: DatePreset
+  range: MetaDateRange
 ): Promise<MetaInsights | null> {
   const fields = 'spend,reach,impressions,clicks,actions,cost_per_action_type';
-  const url = `${BASE}/${adAccountId}/insights?fields=${fields}&date_preset=${datePreset}&access_token=${TOKEN}`;
+  const url = `${BASE}/${adAccountId}/insights?fields=${fields}&${dateRangeParam(range)}&access_token=${TOKEN}`;
   const json = await apiFetch(url);
   const d = json.data?.[0];
   if (!d) return null;
@@ -73,9 +82,9 @@ export async function getAccountInsights(
 
 export async function getAccountTimeSeries(
   adAccountId: string,
-  datePreset: DatePreset
+  range: MetaDateRange
 ): Promise<MetaDailyInsight[]> {
-  const url = `${BASE}/${adAccountId}/insights?fields=spend,reach,actions&date_preset=${datePreset}&time_increment=1&access_token=${TOKEN}`;
+  const url = `${BASE}/${adAccountId}/insights?fields=spend,reach,actions&${dateRangeParam(range)}&time_increment=1&access_token=${TOKEN}`;
   const json = await apiFetch(url);
   return (json.data ?? []).map((d: any) => ({
     date:      d.date_start,
@@ -87,10 +96,13 @@ export async function getAccountTimeSeries(
 
 export async function getCampaigns(
   adAccountId: string,
-  datePreset: DatePreset
+  range: MetaDateRange
 ): Promise<MetaCampaign[]> {
   const insFields = `spend,reach,impressions,actions,cost_per_action_type`;
-  const fields = `id,name,effective_status,insights.date_preset(${datePreset}){${insFields}}`;
+  const insightsEdge = 'since' in range
+    ? `insights.time_range(${JSON.stringify({ since: range.since, until: range.until })})`
+    : `insights.date_preset(${range.preset})`;
+  const fields = `id,name,effective_status,${insightsEdge}{${insFields}}`;
   const url = `${BASE}/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=20&access_token=${TOKEN}`;
   const json = await apiFetch(url);
 
@@ -107,6 +119,39 @@ export async function getCampaigns(
       custoMensagem: costPer(ins?.cost_per_action_type, 'onsite_conversion.messaging_conversation_started_7d'),
     };
   });
+}
+
+// ─── Saldo da conta ──────────────────────────────────────────────────────────
+
+export interface MetaAccountBalance {
+  currency:      string;
+  amountSpent:   number;
+  spendCap:      number;
+  balance:       number;
+  temLimite:     boolean;
+  saldoRestante: number;
+}
+
+// balance/amount_spent/spend_cap vêm em centavos (menor unidade da moeda).
+// Contas sem spend_cap definido são pós-pagas — não têm "saldo" no sentido de recarga.
+export async function getAccountBalance(adAccountId: string): Promise<MetaAccountBalance> {
+  const fields = 'currency,amount_spent,spend_cap,balance';
+  const url = `${BASE}/${adAccountId}?fields=${fields}&access_token=${TOKEN}`;
+  const d = await apiFetch(url);
+
+  const amountSpent = parseInt(d.amount_spent ?? '0', 10);
+  const spendCap     = parseInt(d.spend_cap    ?? '0', 10);
+  const balance      = parseInt(d.balance      ?? '0', 10);
+  const temLimite    = spendCap > 0;
+
+  return {
+    currency:    d.currency ?? 'BRL',
+    amountSpent: amountSpent / 100,
+    spendCap:    spendCap / 100,
+    balance:     balance / 100,
+    temLimite,
+    saldoRestante: temLimite ? (spendCap - amountSpent + balance) / 100 : 0,
+  };
 }
 
 // ─── Feedback semanal ────────────────────────────────────────────────────────

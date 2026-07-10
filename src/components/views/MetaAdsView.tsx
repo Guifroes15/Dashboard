@@ -54,9 +54,9 @@ export function MetaAdsView({ groups }: Props) {
     setLoading(true);
     setError(null);
     Promise.all([
-      getAccountInsights(adAccountId, datePreset),
-      getAccountTimeSeries(adAccountId, datePreset),
-      getCampaigns(adAccountId, datePreset),
+      getAccountInsights(adAccountId, { preset: datePreset }),
+      getAccountTimeSeries(adAccountId, { preset: datePreset }),
+      getCampaigns(adAccountId, { preset: datePreset }),
     ])
       .then(([ins, ts, camps]) => {
         setInsights(ins);
