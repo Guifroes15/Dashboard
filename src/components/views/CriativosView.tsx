@@ -22,7 +22,7 @@ class AnthropicMock {
               'x-api-key': apiKey,
               'anthropic-version': '2023-06-01',
               'content-type': 'application/json',
-              'dangerously-allow-browser': 'true',
+              'anthropic-dangerous-direct-browser-access': 'true',
             },
             body: JSON.stringify({
               model: params.model,
