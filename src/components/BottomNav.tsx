@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart2, Store, Layers, X, ChevronRight, Home, MessageSquare } from 'lucide-react';
+import {
+  LayoutDashboard, BarChart2, Store, Layers, X, ChevronRight, Home, Menu,
+  MessageSquare, Zap, Crown, PlusCircle, Send, Wallet, Sun, Users,
+} from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -10,18 +13,22 @@ interface Props {
   activeGroupId: string;
   activeView: ActiveView;
   isMaster: boolean;
+  isStaff?: boolean;
   onGroupChange: (id: string) => void;
   onViewChange: (view: ActiveView) => void;
 }
 
-export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroupChange, onViewChange }: Props) {
+interface MenuItem { label: string; view: ActiveView; icon: React.ElementType }
+interface MenuSection { label: string; items: MenuItem[] }
+
+export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff = false, onGroupChange, onViewChange }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<'groups' | 'stores'>('groups');
+  const [drawerMode, setDrawerMode] = useState<'groups' | 'stores' | 'menu'>('groups');
 
   const activeGroup = groups.find(g => g.id === activeGroupId) ?? groups[0];
   const isStore = activeView.type === 'store';
 
-  const openDrawer = (mode: 'groups' | 'stores') => {
+  const openDrawer = (mode: 'groups' | 'stores' | 'menu') => {
     setDrawerMode(mode);
     setDrawerOpen(true);
   };
@@ -30,6 +37,33 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroup
 
   const goView = (view: ActiveView) => { onViewChange(view); close(); };
   const goGroup = (id: string) => { onGroupChange(id); close(); };
+
+  const menuSections: MenuSection[] = [
+    ...(isMaster ? [{
+      label: 'Ferramentas IA',
+      items: [
+        { label: 'Análise de Atendimento', view: { type: 'atendimento' } as ActiveView, icon: MessageSquare },
+        { label: 'Criativos',              view: { type: 'criativos' }   as ActiveView, icon: Zap },
+        { label: 'Gerador VIP',            view: { type: 'vip' }         as ActiveView, icon: Crown },
+      ],
+    }] : []),
+    ...(isMaster || isStaff ? [{
+      label: 'Operações',
+      items: [
+        { label: 'Lançar Resultado', view: { type: 'data-entry' }    as ActiveView, icon: PlusCircle },
+        { label: 'Feedbacks Meta',   view: { type: 'meta-feedback' } as ActiveView, icon: Send },
+        { label: 'Saldo Meta Ads',   view: { type: 'meta-balance' }  as ActiveView, icon: Wallet },
+        { label: 'Resumo Diário',    view: { type: 'daily-summary' } as ActiveView, icon: Sun },
+        { label: 'Msgs vs. Conversão', view: { type: 'ranking' }     as ActiveView, icon: BarChart2 },
+      ],
+    }] : []),
+    ...(isMaster ? [{
+      label: 'Administração',
+      items: [
+        { label: 'Usuários', view: { type: 'users' } as ActiveView, icon: Users },
+      ],
+    }] : []),
+  ];
 
   return (
     <>
@@ -52,7 +86,7 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroup
                 </div>
                 <div className="flex items-center justify-between px-5 py-3 border-b border-brand-light">
                   <p className="text-sm font-bold text-white">
-                    {drawerMode === 'groups' ? 'Selecionar grupo' : `${activeGroup.name} — Lojas`}
+                    {drawerMode === 'groups' ? 'Selecionar grupo' : drawerMode === 'menu' ? 'Mais opções' : `${activeGroup.name} — Lojas`}
                   </p>
                   <button onClick={close} className="p-1.5 rounded-lg bg-brand-light text-gray-400">
                     <X className="w-4 h-4" />
@@ -60,6 +94,26 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroup
                 </div>
 
                 <div className="overflow-y-auto flex-1 py-2">
+                  {/* MENU (Ferramentas IA / Operações / Administração) */}
+                  {drawerMode === 'menu' && menuSections.map(section => (
+                    <div key={section.label} className="mb-2">
+                      <p className="px-5 pt-3 pb-1 text-[9px] font-bold text-gray-600 uppercase tracking-widest">{section.label}</p>
+                      {section.items.map(item => {
+                        const active = activeView.type === item.view.type;
+                        return (
+                          <button
+                            key={item.label}
+                            onClick={() => goView(item.view)}
+                            className={`w-full flex items-center gap-3 px-5 py-3 transition-colors ${active ? 'bg-brand-light' : 'hover:bg-brand-light/50'}`}
+                          >
+                            <item.icon className={`w-4 h-4 shrink-0 ${active ? 'text-brand-purple' : 'text-gray-500'}`} />
+                            <span className={`flex-1 text-left text-sm font-semibold ${active ? 'text-white' : 'text-gray-400'}`}>{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+
                   {/* GRUPOS */}
                   {drawerMode === 'groups' && groups.map(g => (
                     <button
@@ -121,29 +175,15 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, onGroup
             <span className="text-[9px] font-bold uppercase tracking-wider">Geral</span>
           </button>
 
-          {isMaster && (
+          {(isMaster || isStaff) && (
             <button
-              onClick={() => goView({ type: 'atendimento' })}
+              onClick={() => openDrawer('menu')}
               className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
-                activeView.type === 'atendimento' || activeView.type === 'criativos' || activeView.type === 'vip'
-                  ? 'text-brand-purple'
-                  : 'text-gray-500'
+                menuSections.some(s => s.items.some(i => i.view.type === activeView.type)) ? 'text-brand-purple' : 'text-gray-500'
               }`}
             >
-              <MessageSquare className="w-5 h-5" />
-              <span className="text-[9px] font-bold uppercase tracking-wider">IA</span>
-            </button>
-          )}
-
-          {isMaster && (
-            <button
-              onClick={() => activeGroup.stores.length > 0 && goView({ type: 'ranking' })}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors relative cursor-pointer ${
-                activeView.type === 'ranking' ? 'text-brand-purple' : activeGroup.stores.length === 0 ? 'text-gray-800' : 'text-gray-500'
-              }`}
-            >
-              <BarChart2 className="w-5 h-5" />
-              <span className="text-[9px] font-bold uppercase tracking-wider">Ranking</span>
+              <Menu className="w-5 h-5" />
+              <span className="text-[9px] font-bold uppercase tracking-wider">Mais</span>
             </button>
           )}
 

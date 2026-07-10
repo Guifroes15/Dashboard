@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { GroupData } from '../../types';
 import { ActiveView } from '../../App';
 import { totalVendas, ultimoMes, calcRoi, formatBRL } from '../../utils';
-import { TrendingUp, TrendingDown, AlertTriangle, ListChecks, FileText, ChevronRight, Target, Lightbulb, Trophy, PauseCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, ListChecks, FileText, ChevronRight, Target, Lightbulb, Trophy, PauseCircle, Wrench } from 'lucide-react';
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, GASTO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
@@ -35,6 +35,17 @@ function trend(ult: ReturnType<typeof ultimoMes>, pen: ReturnType<typeof ultimoM
 }
 
 const fmtBRLCurto = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+
+function tempoRelativo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const horas = Math.floor(diffMs / 3_600_000);
+  if (horas < 1) return 'agora há pouco';
+  if (horas < 24) return `há ${horas}h`;
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return 'ontem';
+  if (dias < 7) return `há ${dias} dias`;
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
 
 function AccountCard({ account, metric, onNavigate }: { account: AccountOverview; metric: React.ReactNode; onNavigate: () => void }) {
   const label = account.stores.map(s => s.name).join(' / ');
@@ -149,6 +160,13 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
   const saldoBaixo = metaAccounts.filter(a => a.balance?.temLimite && a.balance.saldoRestante < SALDO_BAIXO_LIMITE);
   const gastoBaixo = [...comMensagens.filter(a => a.insights!.spend < GASTO_BAIXO_LIMITE)].sort((a, b) => a.insights!.spend - b.insights!.spend);
   const precisaAtencao = saldoBaixo.length + gastoBaixo.length;
+
+  const ultimasOtimizacoes = groups
+    .flatMap(g => g.stores.flatMap(s => (s.otimizacoes ?? []).map(o => ({
+      ...o, storeId: s.id, storeName: s.name, storeColor: s.color, groupId: g.id,
+    }))))
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+    .slice(0, 6);
 
   const thoughts = [
     { icon: Target, text: "O raio de entrega do tráfego pago está otimizado? Focar em 5-10km costuma dobrar a conversão local." },
@@ -309,6 +327,28 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
                   metric={<span className="text-xs font-bold text-amber-500 shrink-0">{a.insights!.mensagens}</span>} />
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Últimas otimizações — feed cruzando todas as contas */}
+      {ultimasOtimizacoes.length > 0 && (
+        <div className="mb-8 bg-brand-medium border border-brand-light rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wrench className="w-4 h-4 text-brand-purple" />
+            <p className="text-xs font-bold text-white uppercase tracking-wider">Últimas otimizações</p>
+          </div>
+          <div className="space-y-1.5">
+            {ultimasOtimizacoes.map(o => (
+              <button key={o.id} onClick={() => onNavigate(o.groupId, { type: 'store', storeId: o.storeId, tab: 'otimizacoes' })}
+                className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-brand-dark/30 hover:bg-brand-dark/50 border border-white/5 transition-all cursor-pointer text-left">
+                <div className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ background: o.storeColor }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-200 leading-snug truncate">{o.descricao}</p>
+                  <p className="text-[10px] text-gray-600 mt-0.5">{o.storeName} · {o.autor} · {tempoRelativo(o.criadoEm)}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       )}

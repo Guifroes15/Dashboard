@@ -18,6 +18,8 @@ import { META_ACCOUNTS } from '../../config/metaAccounts';
 import { MetaDateRange, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
 import { DateRangePicker } from '../ui/DateRangePicker';
 
+type Tab = 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes';
+
 interface Props {
   store: StoreData;
   fee: number;
@@ -25,8 +27,8 @@ interface Props {
   isStaff?: boolean;
   groupId?: string;
   nome?: string;
+  initialTab?: Tab;
 }
-type Tab = 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes';
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'text-green-400 bg-green-400/10', PAUSED: 'text-yellow-400 bg-yellow-400/10', ARCHIVED: 'text-gray-500 bg-gray-500/10',
@@ -57,8 +59,8 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '', nome = '' }: Props) {
-  const [tab, setTab] = useState<Tab>('visao');
+export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '', nome = '', initialTab }: Props) {
+  const [tab, setTab] = useState<Tab>(initialTab ?? 'visao');
   const [showFilter, setShowFilter] = useState(false);
 
   const adAccountId   = META_ACCOUNTS[store.id];

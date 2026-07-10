@@ -36,7 +36,7 @@ export type ActiveView =
   | { type: 'meta-balance' }
   | { type: 'daily-summary' }
   | { type: 'users' }
-  | { type: 'store'; storeId: string };
+  | { type: 'store'; storeId: string; tab?: 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes' };
 
 const SESSION_KEY = 'aure_access';
 
@@ -138,7 +138,7 @@ export default function App() {
     activeView.type === 'store' ? activeGroup?.stores.find(s => s.id === activeView.storeId) : undefined;
 
   const viewKey = activeView.type === 'store'
-    ? `${activeGroupId}-store-${activeView.storeId}`
+    ? `${activeGroupId}-store-${activeView.storeId}-${activeView.tab ?? ''}`
     : `${activeGroupId}-${activeView.type}`;
 
   const pageLabel =
@@ -309,6 +309,7 @@ export default function App() {
                   isStaff={isStaff}
                   groupId={activeGroupId}
                   nome={nomeUsuario}
+                  initialTab={activeView.tab}
                 />
               )}
             </motion.div>
@@ -326,6 +327,7 @@ export default function App() {
           activeGroupId={activeGroupId}
           activeView={activeView}
           isMaster={isMaster}
+          isStaff={isStaff}
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
         />
