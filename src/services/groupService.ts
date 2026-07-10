@@ -36,6 +36,18 @@ export async function seedGroupsToFirestore(groups: GroupData[]): Promise<void> 
   }
 }
 
+export async function deleteStore(groupId: string, storeId: string): Promise<void> {
+  const groupRef = doc(db, 'groups', groupId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(groupRef);
+    if (!snap.exists()) throw new Error('Grupo não encontrado');
+
+    const groupData = snap.data() as GroupData;
+    const newStores = groupData.stores.filter((s) => s.id !== storeId);
+    tx.update(groupRef, { stores: newStores });
+  });
+}
+
 export async function addOrUpdateMonthData(
   groupId: string,
   storeId: string,

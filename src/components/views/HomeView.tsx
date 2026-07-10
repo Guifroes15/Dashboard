@@ -257,7 +257,7 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Pr
 
       {/* Painel lateral de gestão */}
       {gestaoGrupo && (
-        <GestaoPanel group={gestaoGrupo} onClose={() => setGestaoGrupo(null)} />
+        <GestaoPanel group={gestaoGrupo} onClose={() => setGestaoGrupo(null)} isMaster={isMaster} />
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import {
 import { motion } from 'motion/react';
 import { GroupData } from '../../types';
 import { useGestao, CheckItem, Nota } from '../../hooks/useGestao';
+import { deleteStore } from '../../services/groupService';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const TIPO_CONFIG: Record<CheckItem['tipo'], { label: string; color: string; bg: string; Icon: React.ElementType }> = {
@@ -189,11 +190,12 @@ interface LojaPanelProps {
   color: string;
   gestao: ReturnType<typeof useGestao>;
   onSelectNota: (nota: Nota, storeId: string, storeName: string, storeColor: string) => void;
+  isMaster?: boolean;
   key?: React.Key;
 }
 
 // ── LojaPanel ─────────────────────────────────────────────────────────────────
-function LojaPanel({ groupId, storeId, storeName, color, gestao, onSelectNota }: LojaPanelProps) {
+function LojaPanel({ groupId, storeId, storeName, color, gestao, onSelectNota, isMaster = false }: LojaPanelProps) {
   const [open, setOpen]           = useState(false);
   const [tab, setTab]             = useState<'checklist' | 'notas'>('checklist');
   const [novoItem, setNovoItem]   = useState('');
@@ -201,6 +203,21 @@ function LojaPanel({ groupId, storeId, storeName, color, gestao, onSelectNota }:
   const [addingNota, setAddingNota] = useState(false);
   const [novaNota, setNovaNota]   = useState({ titulo: '', conteudo: '' });
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting]   = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteStore = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteStore(groupId, storeId);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Erro ao excluir loja');
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
+  };
 
   const loja = gestao.getLoja(groupId, storeId, storeName);
   const pendentes = loja.checklist.filter(i => !i.feito).length;
@@ -222,33 +239,59 @@ function LojaPanel({ groupId, storeId, storeName, color, gestao, onSelectNota }:
   return (
     <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,.06)' }}>
       {/* Header */}
-      <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-white/[.02] cursor-pointer"
+      <div className="w-full flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-white/[.02]"
         style={{ background: 'rgba(255,255,255,.02)' }}>
-        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-        <span className="flex-1 text-sm font-semibold text-gray-200 truncate">{storeName}</span>
+        <button onClick={() => setOpen(v => !v)}
+          className="flex-1 flex items-center gap-2.5 text-left cursor-pointer min-w-0">
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+          <span className="flex-1 text-sm font-semibold text-gray-200 truncate">{storeName}</span>
 
-        <div className="flex items-center gap-2 text-[10px]">
-          {pendentes > 0 && (
-            <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,158,11,.12)', color: '#f59e0b' }}>
-              {pendentes} pendente{pendentes > 1 ? 's' : ''}
-            </span>
-          )}
-          {concluidos > 0 && (
-            <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(34,197,94,.1)', color: '#22c55e' }}>
-              {concluidos} feita{concluidos > 1 ? 's' : ''}
-            </span>
-          )}
-          {loja.notas.length > 0 && (
-            <span className="text-gray-600">{loja.notas.length} nota{loja.notas.length > 1 ? 's' : ''}</span>
-          )}
-          {loja.checklist.length === 0 && loja.notas.length === 0 && (
-            <span className="text-gray-700">vazio</span>
-          )}
-        </div>
+          <div className="flex items-center gap-2 text-[10px]">
+            {pendentes > 0 && (
+              <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(245,158,11,.12)', color: '#f59e0b' }}>
+                {pendentes} pendente{pendentes > 1 ? 's' : ''}
+              </span>
+            )}
+            {concluidos > 0 && (
+              <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(34,197,94,.1)', color: '#22c55e' }}>
+                {concluidos} feita{concluidos > 1 ? 's' : ''}
+              </span>
+            )}
+            {loja.notas.length > 0 && (
+              <span className="text-gray-600">{loja.notas.length} nota{loja.notas.length > 1 ? 's' : ''}</span>
+            )}
+            {loja.checklist.length === 0 && loja.notas.length === 0 && (
+              <span className="text-gray-700">vazio</span>
+            )}
+          </div>
 
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
-      </button>
+          <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isMaster && (
+          confirmingDelete ? (
+            <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg shrink-0" onClick={e => e.stopPropagation()}>
+              <span className="text-[9px] font-bold text-red-400">Excluir loja?</span>
+              <button onClick={handleDeleteStore} disabled={deleting}
+                className="px-1.5 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[9px] font-bold transition-all cursor-pointer disabled:opacity-50">
+                {deleting ? '...' : 'Sim'}
+              </button>
+              <button onClick={() => setConfirmingDelete(false)} disabled={deleting}
+                className="px-1.5 py-0.5 text-gray-400 hover:text-white rounded text-[9px] font-bold transition-all cursor-pointer">
+                Não
+              </button>
+            </div>
+          ) : (
+            <button onClick={e => { e.stopPropagation(); setConfirmingDelete(true); }} title="Excluir loja"
+              className="p-1.5 rounded-lg text-gray-700 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )
+        )}
+      </div>
+      {deleteError && (
+        <p className="px-4 py-1.5 text-[9px] text-red-400 bg-red-500/5 border-t border-red-500/10">{deleteError}</p>
+      )}
 
       {/* Conteúdo expandido */}
       {open && (
@@ -597,9 +640,10 @@ function NotaDetailModal({ nota, storeName, storeColor, onClose, onUpdate, onDel
 interface Props {
   group: GroupData;
   onClose: () => void;
+  isMaster?: boolean;
 }
 
-export function GestaoPanel({ group, onClose }: Props) {
+export function GestaoPanel({ group, onClose, isMaster = false }: Props) {
   const gestao = useGestao();
 
   const [selectedNota, setSelectedNota] = useState<{
@@ -876,6 +920,7 @@ export function GestaoPanel({ group, onClose }: Props) {
                 color={store.color}
                 gestao={gestao}
                 onSelectNota={handleSelectNota}
+                isMaster={isMaster}
               />
             ))
           )}
