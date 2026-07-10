@@ -99,5 +99,14 @@ export const YAMCOL: GroupData = {
       ],
     },
 
+    // ── VH MANAUARA ────────────────────────────────────────────────────────
+    {
+      id: 'vh-manauara',
+      name: 'VH Manauara',
+      color: '#0ea5e9',
+      historico: [],
+      planos: [],
+    },
+
   ],
 };

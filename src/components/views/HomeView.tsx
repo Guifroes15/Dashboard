@@ -6,7 +6,8 @@ import { TrendingUp, TrendingDown, AlertTriangle, ListChecks, FileText, ChevronR
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, GASTO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
-import { addStore, createGroupIfMissing } from '../../services/groupService';
+import { addStore, createGroupIfMissing, seedGroupsToFirestore } from '../../services/groupService';
+import { GROUPS } from '../../data';
 
 // Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
 const YAMCOL_EXTRA_STORE = { groupId: 'yamcol', id: 'vh-manauara', name: 'VH Manauara', color: '#0ea5e9' };
@@ -66,8 +67,26 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
   const { accounts: metaAccounts } = useMetaAccountsOverview(podeVerMeta ? groups : []);
 
   const allStoreIds = new Set(groups.flatMap(g => g.stores.map(s => s.id)));
-  const missingYamcolExtra = isMaster && !allStoreIds.has(YAMCOL_EXTRA_STORE.id);
+  const existingGroupIds = new Set(groups.map(g => g.id));
+  const missingKnownGroups = isMaster ? GROUPS.filter(g => !existingGroupIds.has(g.id)) : [];
+  const yamcolGroupExists = existingGroupIds.has('yamcol');
+  const missingYamcolExtra = isMaster && yamcolGroupExists && !allStoreIds.has(YAMCOL_EXTRA_STORE.id);
   const missingAvulsos = isMaster ? AVULSOS_STORES.filter(s => !allStoreIds.has(s.id)) : [];
+
+  const [restoring, setRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+
+  const handleRestoreGroups = async () => {
+    setRestoring(true);
+    setRestoreError(null);
+    try {
+      await seedGroupsToFirestore(missingKnownGroups);
+    } catch (err) {
+      setRestoreError(err instanceof Error ? err.message : 'Erro ao restaurar grupos');
+    } finally {
+      setRestoring(false);
+    }
+  };
 
   const pendingItems: PendingItem[] = [
     ...(missingYamcolExtra ? [{
@@ -175,6 +194,23 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
           </div>
         ))}
       </div>
+
+      {/* Grupos sumidos do Firestore — restaura a partir da cópia salva no código */}
+      {missingKnownGroups.length > 0 && (
+        <div className="mb-8 bg-red-950/30 border border-red-500/40 rounded-xl p-4">
+          <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">
+            {missingKnownGroups.length} grupo{missingKnownGroups.length > 1 ? 's' : ''} sumiu do banco: {missingKnownGroups.map(g => g.name).join(', ')}
+          </p>
+          <p className="text-xs text-gray-400 mb-3">
+            Vou restaurar a partir da última cópia salva no código (dados até Mai/26). Se algo mais recente foi lançado direto no Firestore depois disso, não vai vir junto — vai precisar relançar manualmente.
+          </p>
+          <button onClick={handleRestoreGroups} disabled={restoring}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all disabled:opacity-50 cursor-pointer">
+            {restoring ? 'Restaurando…' : `Restaurar ${missingKnownGroups.length > 1 ? 'grupos' : 'grupo'}`}
+          </button>
+          {restoreError && <p className="text-[10px] text-red-400 mt-2">{restoreError}</p>}
+        </div>
+      )}
 
       {/* Configuração pendente — contas do Meta ainda sem loja no dashboard, adicionadas uma por uma */}
       {pendingItems.length > 0 && (
