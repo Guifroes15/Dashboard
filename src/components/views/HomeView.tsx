@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { GroupData } from '../../types';
 import { ActiveView } from '../../App';
 import { totalVendas, ultimoMes, calcRoi, formatBRL } from '../../utils';
-import { TrendingUp, TrendingDown, Minus, ArrowRight, Store, AlertTriangle, CheckCircle, ListChecks, FileText, ChevronRight, Target, Lightbulb } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ArrowRight, Store, AlertTriangle, CheckCircle, ListChecks, FileText, ChevronRight, Target, Lightbulb, Trophy } from 'lucide-react';
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
+import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
 
 interface Props {
   groups: GroupData[];
   onNavigate: (groupId: string, view: ActiveView) => void;
   nome?: string;
   isMaster?: boolean;
+  isStaff?: boolean;
 }
 
 function trend(ult: ReturnType<typeof ultimoMes>, pen: ReturnType<typeof ultimoMes> | null) {
@@ -18,9 +20,29 @@ function trend(ult: ReturnType<typeof ultimoMes>, pen: ReturnType<typeof ultimoM
   return ult.vendas > pen.vendas ? 'alta' : ult.vendas < pen.vendas ? 'baixa' : 'neutro';
 }
 
-export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Props) {
+const fmtBRLCurto = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+
+function AccountCard({ account, metric, onNavigate }: { account: AccountOverview; metric: React.ReactNode; onNavigate: () => void }) {
+  const label = account.stores.map(s => s.name).join(' / ');
+  return (
+    <button onClick={onNavigate}
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-brand-medium border border-brand-light hover:border-gray-500 transition-all cursor-pointer text-left w-full">
+      <div className="flex -space-x-1 shrink-0">
+        {account.stores.slice(0, 3).map(s => (
+          <div key={s.id} className="w-2 h-2 rounded-full border border-brand-dark" style={{ background: s.groupColor }} />
+        ))}
+      </div>
+      <span className="flex-1 text-xs font-semibold text-gray-200 truncate">{label}</span>
+      {metric}
+    </button>
+  );
+}
+
+export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isStaff = false }: Props) {
   const [gestaoGrupo, setGestaoGrupo] = useState<GroupData | null>(null);
   const gestao = useGestao();
+  const podeVerMeta = isMaster || isStaff;
+  const { accounts: metaAccounts } = useMetaAccountsOverview(podeVerMeta ? groups : []);
 
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -34,10 +56,15 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Pr
     return calcRoi(s, g.fee).status === 'positivo';
   }).length;
 
-  const alertas = allStores.filter(s => {
-    const hist = s.historico.filter(m => m.vendas >= 0).slice(-3);
-    return hist.length >= 3 && hist.every((m, i, a) => i === 0 || m.vendas <= a[i-1].vendas);
-  });
+  const goToAccount = (account: AccountOverview) => {
+    const store = account.stores[0];
+    if (store) onNavigate(store.groupId, { type: 'store', storeId: store.id });
+  };
+
+  const comMensagens = metaAccounts.filter(a => a.weekly);
+  const top3Mensagens = [...comMensagens].sort((a, b) => b.weekly!.mensagens - a.weekly!.mensagens).slice(0, 3);
+  const bottom5Mensagens = [...comMensagens].sort((a, b) => a.weekly!.mensagens - b.weekly!.mensagens).slice(0, 5);
+  const saldoBaixo = metaAccounts.filter(a => a.balance?.temLimite && a.balance.saldoRestante < SALDO_BAIXO_LIMITE);
 
   const thoughts = [
     { icon: Target, text: "O raio de entrega do tráfego pago está otimizado? Focar em 5-10km costuma dobrar a conversão local." },
@@ -84,26 +111,57 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false }: Pr
         ))}
       </div>
 
-      {/* Alertas */}
-      {alertas.length > 0 && (
-        <div className="mb-8 bg-amber-950/20 border border-amber-900/30 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-amber-600 animate-pulse" />
-            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">
-              {alertas.length} {alertas.length === 1 ? 'loja precisa de atenção' : 'lojas precisam de atenção'}
-            </p>
+      {/* Saldo baixo — precisa de atenção */}
+      {podeVerMeta && saldoBaixo.length > 0 && (
+        <div className="mb-8 bg-red-950/20 border border-red-900/30 rounded-xl p-4">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+              <p className="text-xs font-bold text-red-500 uppercase tracking-wider">
+                {saldoBaixo.length} {saldoBaixo.length === 1 ? 'conta precisa' : 'contas precisam'} de recarga
+              </p>
+            </div>
+            <button onClick={() => onNavigate(groups[0]?.id ?? '', { type: 'meta-balance' })}
+              className="text-[10px] font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer">
+              Ver todas →
+            </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {alertas.map(s => {
-              const g = groups.find(gr => gr.stores.includes(s))!;
-              return (
-                <button key={s.id} onClick={() => onNavigate(g.id, { type: 'store', storeId: s.id })}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/30 border border-amber-900/30 text-xs text-amber-600 hover:bg-amber-900/40 transition-all cursor-pointer">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
-                  {s.name} <ArrowRight className="w-3 h-3" />
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {saldoBaixo.map(a => (
+              <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
+                metric={<span className="text-xs font-bold text-red-400 shrink-0">{fmtBRLCurto(a.balance!.saldoRestante)}</span>} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Ranking semanal de mensagens */}
+      {podeVerMeta && comMensagens.length > 0 && (
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-brand-medium border border-brand-light rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4 text-green-400" />
+              <p className="text-xs font-bold text-green-400 uppercase tracking-wider">Top 3 da semana · mensagens</p>
+            </div>
+            <div className="space-y-1.5">
+              {top3Mensagens.map(a => (
+                <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
+                  metric={<span className="text-xs font-bold text-green-400 shrink-0">{a.weekly!.mensagens}</span>} />
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-brand-medium border border-brand-light rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingDown className="w-4 h-4 text-amber-500" />
+              <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">Menor volume da semana · mensagens</p>
+            </div>
+            <div className="space-y-1.5">
+              {bottom5Mensagens.map(a => (
+                <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
+                  metric={<span className="text-xs font-bold text-amber-500 shrink-0">{a.weekly!.mensagens}</span>} />
+              ))}
+            </div>
           </div>
         </div>
       )}

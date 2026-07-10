@@ -266,7 +266,7 @@ export default function App() {
               transition={{ duration: 0.2, ease: 'easeOut' }}>
 
               {activeView.type === 'home' && (
-                <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} />
+                <HomeView groups={visibleGroups} onNavigate={handleNavigate} nome={nomeUsuario} isMaster={isMaster} isStaff={isStaff} />
               )}
 
               {isMaster && activeView.type === 'atendimento' && <AtendimentoView />}
