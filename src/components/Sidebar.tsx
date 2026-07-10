@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users, Wallet } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users, Wallet, Sun } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -205,6 +205,18 @@ export function Sidebar({
               >
                 <Wallet className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Saldo Meta Ads</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange({ type: 'daily-summary' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'daily-summary'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Sun className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Resumo Diário</span>
               </button>
             </div>
           </div>

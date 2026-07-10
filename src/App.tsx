@@ -17,6 +17,7 @@ import { DataEntryView }   from './components/views/DataEntryView';
 import { MetaAdsView }     from './components/views/MetaAdsView';
 import { MetaFeedbackView } from './components/views/MetaFeedbackView';
 import { MetaBalanceView } from './components/views/MetaBalanceView';
+import { DailySummaryView } from './components/views/DailySummaryView';
 import { UsersAdminView }  from './components/views/UsersAdminView';
 import { useGroups }       from './hooks/useGroups';
 import { useAuth, profileToAccessState } from './hooks/useAuth';
@@ -33,6 +34,7 @@ export type ActiveView =
   | { type: 'meta-ads' }
   | { type: 'meta-feedback' }
   | { type: 'meta-balance' }
+  | { type: 'daily-summary' }
   | { type: 'users' }
   | { type: 'store'; storeId: string };
 
@@ -148,6 +150,7 @@ export default function App() {
     : activeView.type === 'meta-ads'    ? 'Meta Ads'
     : activeView.type === 'meta-feedback' ? 'Feedbacks Meta'
     : activeView.type === 'meta-balance'  ? 'Saldo Meta Ads'
+    : activeView.type === 'daily-summary' ? 'Resumo Diário'
     : activeView.type === 'users'       ? 'Usuários'
     : activeView.type === 'consolidado' ? (activeGroup?.name ?? '')
     : activeView.type === 'ranking'     ? 'Ranking'
@@ -157,7 +160,7 @@ export default function App() {
     if (!isMaster && ['atendimento', 'criativos', 'vip', 'users'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
-    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback' || activeView.type === 'meta-balance')) {
+    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback' || activeView.type === 'meta-balance' || activeView.type === 'daily-summary')) {
       setActiveView({ type: 'home' });
     }
   }, [isMaster, isStaff, activeView.type]);
@@ -287,6 +290,10 @@ export default function App() {
 
               {(isMaster || isStaff) && activeView.type === 'meta-balance' && (
                 <MetaBalanceView groups={visibleGroups} />
+              )}
+
+              {(isMaster || isStaff) && activeView.type === 'daily-summary' && (
+                <DailySummaryView groups={visibleGroups} />
               )}
 
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}

@@ -143,11 +143,11 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
     if (store) onNavigate(store.groupId, { type: 'store', storeId: store.id });
   };
 
-  const comMensagens = metaAccounts.filter(a => a.weekly);
-  const top3Mensagens = [...comMensagens].sort((a, b) => b.weekly!.mensagens - a.weekly!.mensagens).slice(0, 3);
-  const bottom5Mensagens = [...comMensagens].sort((a, b) => a.weekly!.mensagens - b.weekly!.mensagens).slice(0, 5);
+  const comMensagens = metaAccounts.filter(a => a.insights);
+  const top3Mensagens = [...comMensagens].sort((a, b) => b.insights!.mensagens - a.insights!.mensagens).slice(0, 3);
+  const bottom5Mensagens = [...comMensagens].sort((a, b) => a.insights!.mensagens - b.insights!.mensagens).slice(0, 5);
   const saldoBaixo = metaAccounts.filter(a => a.balance?.temLimite && a.balance.saldoRestante < SALDO_BAIXO_LIMITE);
-  const gastoBaixo = [...comMensagens.filter(a => a.weekly!.spend < GASTO_BAIXO_LIMITE)].sort((a, b) => a.weekly!.spend - b.weekly!.spend);
+  const gastoBaixo = [...comMensagens.filter(a => a.insights!.spend < GASTO_BAIXO_LIMITE)].sort((a, b) => a.insights!.spend - b.insights!.spend);
   const precisaAtencao = saldoBaixo.length + gastoBaixo.length;
 
   const thoughts = [
@@ -274,7 +274,7 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {gastoBaixo.map(a => (
                   <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
-                    metric={<span className="text-xs font-bold text-red-400 shrink-0">{a.weekly!.spend > 0 ? fmtBRLCurto(a.weekly!.spend) : 'Sem gasto'}</span>} />
+                    metric={<span className="text-xs font-bold text-red-400 shrink-0">{a.insights!.spend > 0 ? fmtBRLCurto(a.insights!.spend) : 'Sem gasto'}</span>} />
                 ))}
               </div>
             </div>
@@ -293,7 +293,7 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
             <div className="space-y-1.5">
               {top3Mensagens.map(a => (
                 <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
-                  metric={<span className="text-xs font-bold text-green-400 shrink-0">{a.weekly!.mensagens}</span>} />
+                  metric={<span className="text-xs font-bold text-green-400 shrink-0">{a.insights!.mensagens}</span>} />
               ))}
             </div>
           </div>
@@ -306,7 +306,7 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
             <div className="space-y-1.5">
               {bottom5Mensagens.map(a => (
                 <AccountCard key={a.adAccountId} account={a} onNavigate={() => goToAccount(a)}
-                  metric={<span className="text-xs font-bold text-amber-500 shrink-0">{a.weekly!.mensagens}</span>} />
+                  metric={<span className="text-xs font-bold text-amber-500 shrink-0">{a.insights!.mensagens}</span>} />
               ))}
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { GroupData } from '../types';
 import { META_ACCOUNTS } from '../config/metaAccounts';
-import { MetaAccountBalance, MetaInsights, getAccountBalance, getAccountInsights } from '../services/metaService';
+import { DatePreset, MetaAccountBalance, MetaInsights, getAccountBalance, getAccountInsights } from '../services/metaService';
 
 export interface StoreRef {
   id: string;
@@ -14,12 +14,11 @@ export interface StoreRef {
 export interface AccountOverview {
   adAccountId: string;
   stores: StoreRef[];
-  balance: MetaAccountBalance | null;
-  weekly:  MetaInsights | null;
+  balance:  MetaAccountBalance | null;
+  insights: MetaInsights | null;
   error?: string;
 }
 
-const CACHE_KEY = 'aure_meta_overview_v1';
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export const SALDO_BAIXO_LIMITE = 150; // R$ — abaixo disso, conta "precisa de atenção"
@@ -40,16 +39,18 @@ function buildUniqueAccounts(groups: GroupData[]): Map<string, StoreRef[]> {
   return byAccount;
 }
 
-export function useMetaAccountsOverview(groups: GroupData[]) {
+export function useMetaAccountsOverview(groups: GroupData[], preset: DatePreset = 'last_7d') {
   const [accounts, setAccounts] = useState<AccountOverview[]>([]);
   const [loading, setLoading]   = useState(false);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
+
+  const cacheKey = `aure_meta_overview_v2_${preset}`;
 
   const load = useCallback(async (force = false) => {
     if (groups.length === 0) return;
 
     if (!force) {
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
           const { at, data } = JSON.parse(cached);
@@ -67,15 +68,15 @@ export function useMetaAccountsOverview(groups: GroupData[]) {
 
     const results = await Promise.allSettled(
       Array.from(byAccount.entries()).map(async ([adAccountId, stores]) => {
-        const [balanceRes, weeklyRes] = await Promise.allSettled([
+        const [balanceRes, insightsRes] = await Promise.allSettled([
           getAccountBalance(adAccountId),
-          getAccountInsights(adAccountId, { preset: 'last_7d' }),
+          getAccountInsights(adAccountId, { preset }),
         ]);
         const item: AccountOverview = {
           adAccountId,
           stores,
-          balance: balanceRes.status === 'fulfilled' ? balanceRes.value : null,
-          weekly:  weeklyRes.status  === 'fulfilled' ? weeklyRes.value  : null,
+          balance:  balanceRes.status  === 'fulfilled' ? balanceRes.value  : null,
+          insights: insightsRes.status === 'fulfilled' ? insightsRes.value : null,
         };
         if (balanceRes.status === 'rejected') item.error = balanceRes.reason?.message ?? 'Erro ao buscar saldo';
         return item;
@@ -90,8 +91,8 @@ export function useMetaAccountsOverview(groups: GroupData[]) {
     const at = Date.now();
     setLoadedAt(at);
     setLoading(false);
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at, data }));
-  }, [groups]);
+    sessionStorage.setItem(cacheKey, JSON.stringify({ at, data }));
+  }, [groups, preset, cacheKey]);
 
   useEffect(() => { load(); }, [load]);
 
