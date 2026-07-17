@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users, Wallet, Sun } from 'lucide-react';
+import { TrendingUp, LayoutDashboard, BarChart2, ChevronDown, ChevronRight, Home, LogOut, MessageSquare, Zap, Crown, PlusCircle, Send, Users, Wallet, Sun, CalendarClock, Rocket } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
 
@@ -217,6 +217,30 @@ export function Sidebar({
               >
                 <Sun className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Resumo Diário</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange({ type: 'agenda' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'agenda'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <CalendarClock className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Agenda</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange({ type: 'onboarding' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'onboarding'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Rocket className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Onboarding</span>
               </button>
             </div>
           </div>

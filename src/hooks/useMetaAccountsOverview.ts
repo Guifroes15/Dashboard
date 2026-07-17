@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { GroupData } from '../types';
-import { META_ACCOUNTS } from '../config/metaAccounts';
+import { getAdAccountId } from '../config/metaAccounts';
 import { DatePreset, MetaAccountBalance, MetaInsights, getAccountBalance, getAccountInsights } from '../services/metaService';
 
 export interface StoreRef {
@@ -28,7 +28,7 @@ export function buildUniqueAccounts(groups: GroupData[]): Map<string, StoreRef[]
   const byAccount = new Map<string, StoreRef[]>();
   for (const group of groups) {
     for (const store of group.stores) {
-      const adAccountId = META_ACCOUNTS[store.id];
+      const adAccountId = getAdAccountId(store);
       if (!adAccountId) continue;
       const ref: StoreRef = { id: store.id, name: store.name, groupId: group.id, groupName: group.name, groupColor: group.color };
       const list = byAccount.get(adAccountId);

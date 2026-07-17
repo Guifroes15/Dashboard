@@ -14,7 +14,7 @@ import { OtimizacoesView } from './OtimizacoesView';
 import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users, Wrench } from 'lucide-react';
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 import { useGestao } from '../../hooks/useGestao';
-import { META_ACCOUNTS } from '../../config/metaAccounts';
+import { getAdAccountId } from '../../config/metaAccounts';
 import { MetaDateRange, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
 import { DateRangePicker } from '../ui/DateRangePicker';
 
@@ -63,7 +63,7 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
   const [tab, setTab] = useState<Tab>(initialTab ?? 'visao');
   const [showFilter, setShowFilter] = useState(false);
 
-  const adAccountId   = META_ACCOUNTS[store.id];
+  const adAccountId   = getAdAccountId(store);
   const canSeeMetaAds = (isMaster || isStaff) && !!adAccountId;
 
   // Meta Ads state

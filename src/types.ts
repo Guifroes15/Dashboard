@@ -41,6 +41,14 @@ export interface OtimizacaoItem {
   criadoEm: string;   // timestamp ISO de quando foi lançado no sistema
 }
 
+export interface ReuniaoItem {
+  id: string;
+  data: string;       // YYYY-MM-DD — data em que a reunião foi feita
+  observacao?: string;
+  autor: string;
+  criadoEm: string;
+}
+
 export interface StoreData {
   id: string;
   name: string;
@@ -49,6 +57,8 @@ export interface StoreData {
   historico: MonthData[];
   planos: PlanItem[];
   otimizacoes?: OtimizacaoItem[];
+  reunioes?: ReuniaoItem[];
+  metaAccountId?: string; // act_XXXX — sobrescreve o mapeamento estático em metaAccounts.ts quando presente
 }
 
 export interface GroupData {

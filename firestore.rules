@@ -47,6 +47,11 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // Onboarding — clientes que ainda vão começar, antes de virarem loja/grupo de verdade.
+    match /onboarding/{id} {
+      allow read, write: if isSignedIn();
+    }
+
     // Users
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());

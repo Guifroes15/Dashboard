@@ -8,7 +8,7 @@ import {
   runTransaction,
   setDoc,
 } from 'firebase/firestore';
-import { GroupData, MonthData, OtimizacaoItem, StoreData } from '../types';
+import { GroupData, MonthData, OtimizacaoItem, ReuniaoItem, StoreData } from '../types';
 
 const GROUP_ORDER = ['barbosa', 'paralelas', 'lupo', 'ferracini'];
 
@@ -111,7 +111,13 @@ export async function addOrUpdateMonthData(
   });
 }
 
-export async function addOtimizacao(groupId: string, storeId: string, item: OtimizacaoItem): Promise<void> {
+// Lê o grupo, aplica `mutate` na loja alvo e grava de volta — base comum pras
+// escritas que só mexem num campo (array) embutido numa loja específica.
+async function updateStoreField(
+  groupId: string,
+  storeId: string,
+  mutate: (store: StoreData) => Partial<StoreData>
+): Promise<void> {
   await ensureAuth();
   const groupRef = doc(db, 'groups', groupId);
   await runTransaction(db, async (tx) => {
@@ -123,30 +129,24 @@ export async function addOtimizacao(groupId: string, storeId: string, item: Otim
     if (storeIdx === -1) throw new Error('Loja não encontrada');
 
     const store = groupData.stores[storeIdx];
-    const otimizacoes = [item, ...(store.otimizacoes ?? [])];
-
     const newStores = [...groupData.stores];
-    newStores[storeIdx] = { ...store, otimizacoes };
+    newStores[storeIdx] = { ...store, ...mutate(store) };
     tx.update(groupRef, { stores: newStores });
   });
 }
 
+export async function addOtimizacao(groupId: string, storeId: string, item: OtimizacaoItem): Promise<void> {
+  return updateStoreField(groupId, storeId, (store) => ({ otimizacoes: [item, ...(store.otimizacoes ?? [])] }));
+}
+
 export async function deleteOtimizacao(groupId: string, storeId: string, itemId: string): Promise<void> {
-  await ensureAuth();
-  const groupRef = doc(db, 'groups', groupId);
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(groupRef);
-    if (!snap.exists()) throw new Error('Grupo não encontrado');
+  return updateStoreField(groupId, storeId, (store) => ({ otimizacoes: (store.otimizacoes ?? []).filter((o) => o.id !== itemId) }));
+}
 
-    const groupData = snap.data() as GroupData;
-    const storeIdx = groupData.stores.findIndex((s) => s.id === storeId);
-    if (storeIdx === -1) throw new Error('Loja não encontrada');
+export async function addReuniao(groupId: string, storeId: string, item: ReuniaoItem): Promise<void> {
+  return updateStoreField(groupId, storeId, (store) => ({ reunioes: [item, ...(store.reunioes ?? [])] }));
+}
 
-    const store = groupData.stores[storeIdx];
-    const otimizacoes = (store.otimizacoes ?? []).filter((o) => o.id !== itemId);
-
-    const newStores = [...groupData.stores];
-    newStores[storeIdx] = { ...store, otimizacoes };
-    tx.update(groupRef, { stores: newStores });
-  });
+export async function deleteReuniao(groupId: string, storeId: string, itemId: string): Promise<void> {
+  return updateStoreField(groupId, storeId, (store) => ({ reunioes: (store.reunioes ?? []).filter((r) => r.id !== itemId) }));
 }

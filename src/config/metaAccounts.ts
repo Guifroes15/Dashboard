@@ -36,3 +36,10 @@ export const META_ACCOUNTS: Record<string, string> = {
   'guapa':               'act_762506169917049',
   'mega-calcados':       'act_1554142619144234',
 };
+
+// Lojas criadas via Onboarding levam o próprio act_ID direto no Firestore
+// (store.metaAccountId), sem precisar editar este arquivo e fazer deploy.
+// Esse mapa estático continua valendo como fallback pras contas antigas.
+export function getAdAccountId(store: { id: string; metaAccountId?: string }): string | undefined {
+  return store.metaAccountId || META_ACCOUNTS[store.id];
+}
