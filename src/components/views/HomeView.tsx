@@ -6,11 +6,10 @@ import { TrendingUp, TrendingDown, AlertTriangle, ListChecks, FileText, ChevronR
 import { GestaoPanel } from './GestaoPanel';
 import { useGestao } from '../../hooks/useGestao';
 import { useMetaAccountsOverview, SALDO_BAIXO_LIMITE, GASTO_BAIXO_LIMITE, AccountOverview } from '../../hooks/useMetaAccountsOverview';
-import { addStore, createGroupIfMissing, seedGroupsToFirestore } from '../../services/groupService';
+import { createGroupIfMissing, deleteGroup, seedGroupsToFirestore } from '../../services/groupService';
 import { GROUPS } from '../../data';
 
 // Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
-const YAMCOL_EXTRA_STORE = { groupId: 'yamcol', id: 'vh-manauara', name: 'VH Manauara', color: '#0ea5e9' };
 // Cada uma vira seu próprio grupo (loja avulsa, sem agrupar sob um "Clientes Avulsos" compartilhado)
 const AVULSOS_STORES = [
   { id: 'amo-outlet',          name: 'Amo Outlet',          color: '#f97316' },
@@ -80,9 +79,24 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
   const allStoreIds = new Set(groups.flatMap(g => g.stores.map(s => s.id)));
   const existingGroupIds = new Set(groups.map(g => g.id));
   const missingKnownGroups = isMaster ? GROUPS.filter(g => !existingGroupIds.has(g.id)) : [];
-  const yamcolGroupExists = existingGroupIds.has('yamcol');
-  const missingYamcolExtra = isMaster && yamcolGroupExists && !allStoreIds.has(YAMCOL_EXTRA_STORE.id);
   const missingAvulsos = isMaster ? AVULSOS_STORES.filter(s => !allStoreIds.has(s.id)) : [];
+
+  // Grupo Yamcol não é mais atendido — não existe mais no código, então se ainda
+  // estiver no Firestore, oferece remover com 1 clique.
+  const yamcolAindaNoFirestore = isMaster && existingGroupIds.has('yamcol');
+  const [removendoYamcol, setRemovendoYamcol] = useState(false);
+  const [removerYamcolError, setRemoverYamcolError] = useState<string | null>(null);
+  const handleRemoverYamcol = async () => {
+    setRemovendoYamcol(true);
+    setRemoverYamcolError(null);
+    try {
+      await deleteGroup('yamcol');
+    } catch (err) {
+      setRemoverYamcolError(err instanceof Error ? err.message : 'Erro ao remover grupo');
+    } finally {
+      setRemovendoYamcol(false);
+    }
+  };
 
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
@@ -99,25 +113,15 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
     }
   };
 
-  const pendingItems: PendingItem[] = [
-    ...(missingYamcolExtra ? [{
-      key: YAMCOL_EXTRA_STORE.id,
-      label: `${YAMCOL_EXTRA_STORE.name} (Grupo Yamcol)`,
-      add: () => addStore(YAMCOL_EXTRA_STORE.groupId, {
-        id: YAMCOL_EXTRA_STORE.id, name: YAMCOL_EXTRA_STORE.name, color: YAMCOL_EXTRA_STORE.color,
-        historico: [], planos: [],
-      }),
-    }] : []),
-    ...missingAvulsos.map(s => ({
-      key: s.id,
-      label: s.name,
-      // Cada avulsa vira seu próprio grupo com uma única loja — tudo num write só.
-      add: () => createGroupIfMissing({
-        id: s.id, name: s.name, color: s.color, fee: 0,
-        stores: [{ id: s.id, name: s.name, color: s.color, historico: [], planos: [] }],
-      }),
-    })),
-  ];
+  const pendingItems: PendingItem[] = missingAvulsos.map(s => ({
+    key: s.id,
+    label: s.name,
+    // Cada avulsa vira seu próprio grupo com uma única loja — tudo num write só.
+    add: () => createGroupIfMissing({
+      id: s.id, name: s.name, color: s.color, fee: 0,
+      stores: [{ id: s.id, name: s.name, color: s.color, historico: [], planos: [] }],
+    }),
+  }));
 
   const handleAddOne = async (item: PendingItem) => {
     setAddingKey(item.key);
@@ -212,6 +216,21 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
           </div>
         ))}
       </div>
+
+      {/* Grupo Yamcol não é mais atendido — remove do Firestore com 1 clique */}
+      {yamcolAindaNoFirestore && (
+        <div className="mb-8 bg-red-950/30 border border-red-500/40 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Grupo Yamcol ainda está no dashboard</p>
+            <p className="text-xs text-gray-400">Já foi removido do código — falta só apagar do banco de dados.</p>
+            {removerYamcolError && <p className="text-[10px] text-red-400 mt-1">{removerYamcolError}</p>}
+          </div>
+          <button onClick={handleRemoverYamcol} disabled={removendoYamcol}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all disabled:opacity-50 cursor-pointer shrink-0">
+            {removendoYamcol ? 'Removendo…' : 'Remover Grupo Yamcol'}
+          </button>
+        </div>
+      )}
 
       {/* Grupos sumidos do Firestore — restaura a partir da cópia salva no código */}
       {missingKnownGroups.length > 0 && (

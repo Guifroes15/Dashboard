@@ -5,19 +5,6 @@ import { getAccountFeedbackData, FeedbackData } from '../../services/metaService
 
 // Nome de exibição para cada chave do META_ACCOUNTS
 const DISPLAY_NAMES: Record<string, string> = {
-  // Yamcol
-  'stanley':        'Stanley Boulevard',
-  'tommy':          'Tommy Hilfiger',
-  'milon':          'Milon Boulevard',
-  'taco':           'Taco Boulevard',
-  'vh-boulevard':   'Victor Hugo Boulevard',
-  'vh-bosque':      'Victor Hugo Bosque',
-  'vh-fortaleza':   'Victor Hugo Fortaleza',
-  'vh-ribeirao':    'Victor Hugo Ribeirão Preto',
-  'vh-manauara':    'Victor Hugo Manauara',
-  'osklen-manaus':  'Osklen Manaus',
-  'osklen-pvh':     'Osklen Porto Velho',
-  'plie':           'Plié Boulevard',
   // Barbosa
   'barbosa-calcados': 'Barbosa Calçados',
   'arezzo':           'Arezzo GV',
@@ -62,13 +49,6 @@ const MULTI_STORE_GROUPS = [
       { key: 'lupo-manauara',    name: 'Lupo Manauara',    nameFilter: 'MANAUARA'    },
       { key: 'lupo-ponta-negra', name: 'Lupo Ponta Negra', nameFilter: 'PONTA NEGRA' },
       { key: 'lupo-sumauma',     name: 'Lupo Sumaúma',     nameFilter: 'SUMAUMA'     },
-    ],
-  },
-  {
-    accountId: META_ACCOUNTS['vh-boulevard'], // act_739663585617111
-    stores: [
-      { key: 'vh-boulevard', name: 'Victor Hugo Boulevard', nameFilter: 'BOULEVARD' },
-      { key: 'vh-bosque',    name: 'Victor Hugo Bosque',    nameFilter: 'BOSQUE'    },
     ],
   },
 ];

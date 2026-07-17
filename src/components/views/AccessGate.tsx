@@ -44,8 +44,7 @@ export const ACCESS_CONFIG: Record<string, {
   },
 
   // ── Clientes (só o grupo deles, sem IA, sem saudação) ────────────────────
-  // Para gestor com múltiplos grupos: groupIds: ['yamcol', 'barbosa']
-  'yamcol2026':    { groupIds: ['yamcol'],    isMaster: false, isStaff: false, nome: '' },
+  // Para gestor com múltiplos grupos: groupIds: ['barbosa', 'lupo']
   'barbosa2026':   { groupIds: ['barbosa'],   isMaster: false, isStaff: false, nome: '' },
   'paralelas2026': { groupIds: ['paralelas'], isMaster: false, isStaff: false, nome: '' },
   'lupo2026':      { groupIds: ['lupo'],      isMaster: false, isStaff: false, nome: '' },

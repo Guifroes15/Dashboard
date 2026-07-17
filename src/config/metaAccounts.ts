@@ -1,12 +1,5 @@
 // Mapeamento storeId → Ad Account ID do Meta
 export const META_ACCOUNTS: Record<string, string> = {
-  // Grupo Yamcol
-  'milon':          'act_1155969356388532',
-  'vh-boulevard':   'act_739663585617111',
-  'vh-bosque':      'act_739663585617111', // mesma conta
-  'vh-ribeirao':    'act_1513320246332787',
-  'vh-manauara':    'act_987229157329989',
-
   // Grupo Barbosa
   'barbosa-calcados': 'act_1178750667162275',
   'arezzo':           'act_4081176875538396',

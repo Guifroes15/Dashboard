@@ -9,7 +9,6 @@ export interface UserProfile {
 }
 
 export const GROUPS_CONFIG = [
-  { id: 'yamcol',    name: 'Grupo YAMCOL',    color: '#7C3AED' },
   { id: 'barbosa',   name: 'Grupo Barbosa',   color: '#3B82F6' },
   { id: 'paralelas', name: 'Grupo Paralelas', color: '#10B981' },
   { id: 'lupo',      name: 'Grupo Lupo',      color: '#EF4444' },

@@ -1,6 +1,7 @@
 import { db, ensureAuth } from '../lib/firebase';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -9,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { GroupData, MonthData, OtimizacaoItem, StoreData } from '../types';
 
-const GROUP_ORDER = ['yamcol', 'barbosa', 'paralelas', 'lupo', 'ferracini'];
+const GROUP_ORDER = ['barbosa', 'paralelas', 'lupo', 'ferracini'];
 
 export function subscribeToGroups(
   callback: (groups: GroupData[]) => void,
@@ -58,6 +59,11 @@ export async function createGroupIfMissing(group: GroupData): Promise<void> {
   const snap = await getDoc(groupRef);
   if (snap.exists()) return;
   await setDoc(groupRef, group);
+}
+
+export async function deleteGroup(groupId: string): Promise<void> {
+  await ensureAuth();
+  await deleteDoc(doc(db, 'groups', groupId));
 }
 
 export async function deleteStore(groupId: string, storeId: string): Promise<void> {

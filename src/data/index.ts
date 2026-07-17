@@ -1,19 +1,17 @@
 import { GroupData, IdeaItem } from '../types';
-import { YAMCOL }    from './yamcol';
 import { BARBOSA }   from './barbosa';
 import { PARALELAS } from './paralelas';
 import { LUPO }      from './lupo';
 import { FERRACINI } from './ferracini';
 
 export const GROUPS: GroupData[] = [
-  YAMCOL,
   BARBOSA,
   PARALELAS,
   LUPO,
   FERRACINI,
 ];
 
-export { YAMCOL, BARBOSA, PARALELAS, LUPO, FERRACINI };
+export { BARBOSA, PARALELAS, LUPO, FERRACINI };
 
 export const IDEAS: IdeaItem[] = [
   {
