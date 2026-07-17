@@ -42,9 +42,9 @@ export function OnboardingView({ groups }: Props) {
         id: uid(),
         nome: form.nome.trim(),
         cor: PALETA[pendentes.length % PALETA.length],
-        metaAccountId: form.metaAccountId.trim() || undefined,
-        grupoExistente: form.grupoExistente || undefined,
-        observacoes: form.observacoes.trim() || undefined,
+        metaAccountId: form.metaAccountId.trim(),
+        grupoExistente: form.grupoExistente,
+        observacoes: form.observacoes.trim(),
         status: 'pendente',
         criadoEm: new Date().toISOString(),
       });

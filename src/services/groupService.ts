@@ -150,3 +150,9 @@ export async function addReuniao(groupId: string, storeId: string, item: Reuniao
 export async function deleteReuniao(groupId: string, storeId: string, itemId: string): Promise<void> {
   return updateStoreField(groupId, storeId, (store) => ({ reunioes: (store.reunioes ?? []).filter((r) => r.id !== itemId) }));
 }
+
+export async function updateReuniao(groupId: string, storeId: string, itemId: string, patch: Partial<ReuniaoItem>): Promise<void> {
+  return updateStoreField(groupId, storeId, (store) => ({
+    reunioes: (store.reunioes ?? []).map((r) => r.id === itemId ? { ...r, ...patch } : r),
+  }));
+}
