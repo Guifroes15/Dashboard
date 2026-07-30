@@ -136,6 +136,16 @@ export default function App() {
     Array.isArray(access?.groupIds) &&
     access.groupIds.some(g => CLIENTES_COM_META_ADS.includes(g));
 
+  // Identidade visual própria (preto/branco/vermelho + logo) só pro login
+  // cliente da Ferracini — master/staff continuam vendo o tema padrão Aure.
+  const temaFerracini = !isMaster && !isStaff &&
+    Array.isArray(access?.groupIds) && access.groupIds.includes('ferracini');
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.toggle('theme-ferracini', temaFerracini);
+  }, [temaFerracini]);
+
   useEffect(() => {
     if (visibleGroups.length > 0 && !activeGroupId) {
       setActiveGroupId(visibleGroups[0].id);
@@ -244,6 +254,7 @@ export default function App() {
           isMaster={isMaster}
           isStaff={isStaff}
           clienteComMetaAds={clienteComMetaAds}
+          temaFerracini={temaFerracini}
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
           onLogout={handleLogout}
@@ -256,7 +267,7 @@ export default function App() {
         <header className="lg:hidden sticky top-0 z-40 bg-brand-medium/95 backdrop-blur border-b border-brand-light px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: activeGroup.color }} />
-            <span className="text-xs font-bold text-brand-purple">Aure Digital</span>
+            <span className="text-xs font-bold text-brand-purple">{temaFerracini ? 'Ferracini' : 'Aure Digital'}</span>
             {activeView.type !== 'home' && (
               <><span className="text-gray-700 text-xs">/</span><span className="text-xs text-gray-500">{activeGroup.name}</span></>
             )}
@@ -336,6 +347,7 @@ export default function App() {
                   isMaster={isMaster}
                   isStaff={isStaff}
                   podeVerMetaAds={isMaster || isStaff || clienteComMetaAds}
+                  podeVerOtimizacoes={isMaster || isStaff || !clienteComMetaAds}
                   groupId={activeGroupId}
                   nome={nomeUsuario}
                   initialTab={activeView.tab}

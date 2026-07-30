@@ -233,6 +233,21 @@
   color: #4f46e5 !important;
 }
 
+/* ─── Identidade Ferracini (preto/branco/vermelho) ──────────────────────────
+   Aplicada só no login cliente da Ferracini (ver `temaFerracini` em App.tsx).
+   Reaproveita o esquema preto/branco que já é o tema escuro padrão e troca
+   só o acento roxo por vermelho — sem redefinir cada cor semântica (verde de
+   sucesso, vermelho de alerta) pra não quebrar os significados existentes. */
+.theme-ferracini {
+  --color-brand-purple: #dc2626;
+  --color-brand-purple-light: #ef4444;
+  --accent-primary: #dc2626;
+}
+
+.theme-ferracini .text-brand-purple2 {
+  color: #dc2626 !important;
+}
+
 /* CRITICAL: Retain pristine white text inside filled primary interaction buttons and badges */
 .light button.bg-brand-purple,
 .light button.bg-brand-purple *,

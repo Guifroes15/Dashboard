@@ -26,6 +26,7 @@ interface Props {
   isMaster?: boolean;
   isStaff?: boolean;
   podeVerMetaAds?: boolean;
+  podeVerOtimizacoes?: boolean;
   groupId?: string;
   nome?: string;
   initialTab?: Tab;
@@ -60,9 +61,15 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, podeVerMetaAds = false, groupId = '', nome = '', initialTab }: Props) {
+export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, podeVerMetaAds = false, podeVerOtimizacoes = true, groupId = '', nome = '', initialTab }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab ?? 'visao');
   const [showFilter, setShowFilter] = useState(false);
+
+  // Se a aba ativa foi escondida pra esse acesso (ex.: cliente Ferracini sem
+  // Otimizações), volta pra Resultados em vez de deixar a tela em branco.
+  useEffect(() => {
+    if (tab === 'otimizacoes' && !podeVerOtimizacoes) setTab('visao');
+  }, [tab, podeVerOtimizacoes]);
 
   const adAccountId   = getAdAccountId(store);
   const canSeeMetaAds = (isMaster || isStaff || podeVerMetaAds) && !!adAccountId;
@@ -231,9 +238,11 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
               <Target className="w-3.5 h-3.5" />Meta Ads
             </button>
           )}
-          <button onClick={() => setTab('otimizacoes')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'otimizacoes' ? 'bg-brand-light text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-            <Wrench className="w-3.5 h-3.5" />Otimizações
-          </button>
+          {podeVerOtimizacoes && (
+            <button onClick={() => setTab('otimizacoes')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${tab === 'otimizacoes' ? 'bg-brand-light text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
+              <Wrench className="w-3.5 h-3.5" />Otimizações
+            </button>
+          )}
         </div>
 
         {tab === 'visao' && (
@@ -583,7 +592,7 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
       )}
 
       {/* ── ABA OTIMIZAÇÕES ── */}
-      {tab === 'otimizacoes' && (
+      {tab === 'otimizacoes' && podeVerOtimizacoes && (
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
           <OtimizacoesView store={store} groupId={groupId} podeEditar={isMaster || isStaff} nome={nome} />
         </motion.div>

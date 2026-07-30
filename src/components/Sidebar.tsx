@@ -13,6 +13,7 @@ interface Props {
   isMaster?: boolean;
   isStaff?: boolean;
   clienteComMetaAds?: boolean;
+  temaFerracini?: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }
@@ -27,6 +28,7 @@ export function Sidebar({
   isMaster = false,
   isStaff = false,
   clienteComMetaAds = false,
+  temaFerracini = false,
   theme,
   onToggleTheme
 }: Props) {
@@ -69,13 +71,23 @@ export function Sidebar({
 
       {/* Logo */}
       <div className="mb-6">
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className="w-7 h-7 bg-brand-purple/20 border border-brand-purple/30 rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-brand-purple" />
+        {temaFerracini ? (
+          <div className="flex items-center gap-0.5 mb-1">
+            <span className="text-lg font-black text-white tracking-tight">FERRAC</span>
+            <span className="text-lg font-black text-red-600 tracking-tight italic">I</span>
+            <span className="text-lg font-black text-white tracking-tight">NI</span>
           </div>
-          <span className="text-base font-bold text-white">Aure Digital</span>
-        </div>
-        <p className="text-[9px] text-gray-700 font-bold uppercase tracking-widest pl-9">Painel de Controle</p>
+        ) : (
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-7 h-7 bg-brand-purple/20 border border-brand-purple/30 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-brand-purple" />
+            </div>
+            <span className="text-base font-bold text-white">Aure Digital</span>
+          </div>
+        )}
+        <p className={`text-[9px] text-gray-700 font-bold uppercase tracking-widest ${temaFerracini ? 'pl-0.5' : 'pl-9'}`}>
+          {temaFerracini ? 'Painel de Resultados' : 'Painel de Controle'}
+        </p>
       </div>
 
       <nav className="flex-1 space-y-4">

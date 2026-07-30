@@ -44,7 +44,12 @@ export function useMetaAccountsOverview(groups: GroupData[], preset: DatePreset 
   const [loading, setLoading]   = useState(false);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
 
-  const cacheKey = `aure_meta_overview_v2_${preset}`;
+  // O cache precisa ser escopado pelas contas visíveis nesse login, senão um
+  // acesso mais amplo (ex.: master vendo todas as contas) deixa cache salvo
+  // no sessionStorage e um login mais restrito (ex.: cliente) herda esses
+  // dados até clicar em "Atualizar" — foi o bug reportado pela Ferracini.
+  const accountScope = Array.from(buildUniqueAccounts(groups).keys()).sort().join(',');
+  const cacheKey = `aure_meta_overview_v3_${preset}_${accountScope}`;
 
   const load = useCallback(async (force = false) => {
     if (groups.length === 0) return;
