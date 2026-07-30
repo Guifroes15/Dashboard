@@ -72,11 +72,11 @@ export function Sidebar({
       {/* Logo */}
       <div className="mb-6">
         {temaFerracini ? (
-          <div className="flex items-center gap-0.5 mb-1">
-            <span className="text-lg font-black text-white tracking-tight">FERRAC</span>
-            <span className="text-lg font-black text-red-600 tracking-tight italic">I</span>
-            <span className="text-lg font-black text-white tracking-tight">NI</span>
-          </div>
+          <img
+            src={theme === 'dark' ? '/ferracini/logo-white.png' : '/ferracini/logo-black.png'}
+            alt="Ferracini"
+            className="h-6 w-auto mb-1"
+          />
         ) : (
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-7 h-7 bg-brand-purple/20 border border-brand-purple/30 rounded-lg flex items-center justify-center">

@@ -267,7 +267,15 @@ export default function App() {
         <header className="lg:hidden sticky top-0 z-40 bg-brand-medium/95 backdrop-blur border-b border-brand-light px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: activeGroup.color }} />
-            <span className="text-xs font-bold text-brand-purple">{temaFerracini ? 'Ferracini' : 'Aure Digital'}</span>
+            {temaFerracini ? (
+              <img
+                src={theme === 'dark' ? '/ferracini/logo-white.png' : '/ferracini/logo-black.png'}
+                alt="Ferracini"
+                className="h-3.5 w-auto"
+              />
+            ) : (
+              <span className="text-xs font-bold text-brand-purple">Aure Digital</span>
+            )}
             {activeView.type !== 'home' && (
               <><span className="text-gray-700 text-xs">/</span><span className="text-xs text-gray-500">{activeGroup.name}</span></>
             )}
