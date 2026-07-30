@@ -44,6 +44,11 @@ export type ActiveView =
 
 const SESSION_KEY = 'aure_access';
 
+// Clientes que já pediram visão própria de saldo + resultados do Meta Ads
+// (além do que todo cliente já vê: vendas com projeção). Só adiciona um
+// groupId aqui a pedido do Guilherme — por padrão cliente não vê Meta Ads.
+const CLIENTES_COM_META_ADS = ['ferracini'];
+
 export default function App() {
   // Firebase Auth — para colegas que usam email/Google
   const { loading: authLoading, accessState: firebaseAccess, logout: firebaseLogout } = useAuth();
@@ -126,6 +131,11 @@ export default function App() {
   const isStaff     = access?.isStaff  ?? false;
   const nomeUsuario = access?.nome ?? '';
 
+  // Cliente (não master/staff) de um grupo liberado pra ver saldo + Meta Ads
+  const clienteComMetaAds = !isMaster && !isStaff &&
+    Array.isArray(access?.groupIds) &&
+    access.groupIds.some(g => CLIENTES_COM_META_ADS.includes(g));
+
   useEffect(() => {
     if (visibleGroups.length > 0 && !activeGroupId) {
       setActiveGroupId(visibleGroups[0].id);
@@ -166,10 +176,13 @@ export default function App() {
     if (!isMaster && ['atendimento', 'criativos', 'vip', 'users'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
-    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback' || activeView.type === 'meta-balance' || activeView.type === 'daily-summary' || activeView.type === 'agenda' || activeView.type === 'onboarding')) {
+    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback' || activeView.type === 'daily-summary' || activeView.type === 'agenda' || activeView.type === 'onboarding')) {
       setActiveView({ type: 'home' });
     }
-  }, [isMaster, isStaff, activeView.type]);
+    if (!isMaster && !isStaff && !clienteComMetaAds && activeView.type === 'meta-balance') {
+      setActiveView({ type: 'home' });
+    }
+  }, [isMaster, isStaff, clienteComMetaAds, activeView.type]);
 
   // ── Firebase verificando sessão ───────────────────────────────────────────
   if (authLoading) {
@@ -230,6 +243,7 @@ export default function App() {
           activeView={activeView}
           isMaster={isMaster}
           isStaff={isStaff}
+          clienteComMetaAds={clienteComMetaAds}
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
           onLogout={handleLogout}
@@ -294,7 +308,7 @@ export default function App() {
                 <MetaFeedbackView />
               )}
 
-              {(isMaster || isStaff) && activeView.type === 'meta-balance' && (
+              {(isMaster || isStaff || clienteComMetaAds) && activeView.type === 'meta-balance' && (
                 <MetaBalanceView groups={visibleGroups} />
               )}
 
@@ -321,6 +335,7 @@ export default function App() {
                   fee={activeStore.fee ?? activeGroup.fee}
                   isMaster={isMaster}
                   isStaff={isStaff}
+                  podeVerMetaAds={isMaster || isStaff || clienteComMetaAds}
                   groupId={activeGroupId}
                   nome={nomeUsuario}
                   initialTab={activeView.tab}
@@ -342,6 +357,7 @@ export default function App() {
           activeView={activeView}
           isMaster={isMaster}
           isStaff={isStaff}
+          clienteComMetaAds={clienteComMetaAds}
           onGroupChange={handleGroupChange}
           onViewChange={handleViewChange}
         />

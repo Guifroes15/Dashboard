@@ -12,6 +12,7 @@ interface Props {
   onLogout?: () => void;
   isMaster?: boolean;
   isStaff?: boolean;
+  clienteComMetaAds?: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }
@@ -25,6 +26,7 @@ export function Sidebar({
   onLogout,
   isMaster = false,
   isStaff = false,
+  clienteComMetaAds = false,
   theme,
   onToggleTheme
 }: Props) {
@@ -241,6 +243,26 @@ export function Sidebar({
               >
                 <Rocket className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-bold">Onboarding</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Saldo Meta Ads — cliente com acesso próprio, sem o resto de Operações */}
+        {clienteComMetaAds && (
+          <div className="space-y-1">
+            <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest px-3 mb-1.5">Meta Ads</p>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => onViewChange({ type: 'meta-balance' })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left cursor-pointer ${
+                  activeView.type === 'meta-balance'
+                    ? 'bg-brand-light text-white border-l-2 border-brand-purple'
+                    : 'text-gray-400 hover:bg-brand-light/50 hover:text-white'
+                }`}
+              >
+                <Wallet className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-bold">Saldo Meta Ads</span>
               </button>
             </div>
           </div>

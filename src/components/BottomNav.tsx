@@ -14,6 +14,7 @@ interface Props {
   activeView: ActiveView;
   isMaster: boolean;
   isStaff?: boolean;
+  clienteComMetaAds?: boolean;
   onGroupChange: (id: string) => void;
   onViewChange: (view: ActiveView) => void;
 }
@@ -21,7 +22,7 @@ interface Props {
 interface MenuItem { label: string; view: ActiveView; icon: React.ElementType }
 interface MenuSection { label: string; items: MenuItem[] }
 
-export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff = false, onGroupChange, onViewChange }: Props) {
+export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff = false, clienteComMetaAds = false, onGroupChange, onViewChange }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'groups' | 'stores' | 'menu'>('groups');
 
@@ -63,6 +64,12 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff
       label: 'Administração',
       items: [
         { label: 'Usuários', view: { type: 'users' } as ActiveView, icon: Users },
+      ],
+    }] : []),
+    ...(clienteComMetaAds ? [{
+      label: 'Meta Ads',
+      items: [
+        { label: 'Saldo Meta Ads', view: { type: 'meta-balance' } as ActiveView, icon: Wallet },
       ],
     }] : []),
   ];
@@ -177,7 +184,7 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff
             <span className="text-[9px] font-bold uppercase tracking-wider">Geral</span>
           </button>
 
-          {(isMaster || isStaff) && (
+          {(isMaster || isStaff || clienteComMetaAds) && (
             <button
               onClick={() => openDrawer('menu')}
               className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${

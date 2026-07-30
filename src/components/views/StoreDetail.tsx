@@ -25,6 +25,7 @@ interface Props {
   fee: number;
   isMaster?: boolean;
   isStaff?: boolean;
+  podeVerMetaAds?: boolean;
   groupId?: string;
   nome?: string;
   initialTab?: Tab;
@@ -59,12 +60,12 @@ const itemVariants = {
   },
 };
 
-export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, groupId = '', nome = '', initialTab }: Props) {
+export function StoreDetailView({ store, fee, isMaster = false, isStaff = false, podeVerMetaAds = false, groupId = '', nome = '', initialTab }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab ?? 'visao');
   const [showFilter, setShowFilter] = useState(false);
 
   const adAccountId   = getAdAccountId(store);
-  const canSeeMetaAds = (isMaster || isStaff) && !!adAccountId;
+  const canSeeMetaAds = (isMaster || isStaff || podeVerMetaAds) && !!adAccountId;
 
   // Meta Ads state
   const [metaDateRange, setMetaDateRange]   = useState<MetaDateRange>({ preset: 'last_30d' });
