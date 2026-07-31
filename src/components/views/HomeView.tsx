@@ -17,7 +17,6 @@ const AVULSOS_STORES = [
   { id: 'carrano',             name: 'Carrano',             color: '#22c55e' },
   { id: 'democrata-rio-verde', name: 'Democrata Rio Verde', color: '#3b82f6' },
   { id: 'guapa',               name: 'Guapa',               color: '#a855f7' },
-  { id: 'mega-calcados',       name: 'Mega Calçados',       color: '#eab308' },
 ];
 
 interface Props {

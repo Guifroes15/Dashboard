@@ -35,9 +35,11 @@ const DISPLAY_NAMES: Record<string, string> = {
   'carrano':             'Carrano',
   'democrata-rio-verde': 'Democrata Rio Verde',
   'guapa':               'Guapa',
-  'kipasso':             'Kipasso Calçados',
-  'mega-calcados':       'Mega Calçados',
-  'sergios':             "Sergio's",
+  'taco-montes-claros':  'Taco Montes Claros',
+  'valenze':             'Valenze',
+  'americos-calcados':   'Américos Calçados',
+  'americos-calcados-2': 'Américos Calçados 2',
+  'americos-calcados-3': 'Américos Calçados 3',
 };
 
 // Contas com múltiplas lojas: cada loja filtra por keyword no nome de campanha

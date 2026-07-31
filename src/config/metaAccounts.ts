@@ -34,7 +34,11 @@ export const META_ACCOUNTS: Record<string, string> = {
   'carrano':             'act_1495252901655411',
   'democrata-rio-verde': 'act_1366988761930824',
   'guapa':               'act_762506169917049',
-  'mega-calcados':       'act_1554142619144234',
+  'taco-montes-claros':  'act_1537993077200896',
+  'valenze':             'act_982882594777983',
+  'americos-calcados':   'act_1596462802205733',
+  'americos-calcados-2': 'act_1447709487166465',
+  'americos-calcados-3': 'act_1670310224049944',
 };
 
 // Lojas criadas via Onboarding levam o próprio act_ID direto no Firestore
