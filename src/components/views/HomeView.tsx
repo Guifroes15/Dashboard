@@ -17,6 +17,11 @@ const AVULSOS_STORES = [
   { id: 'carrano',             name: 'Carrano',             color: '#22c55e' },
   { id: 'democrata-rio-verde', name: 'Democrata Rio Verde', color: '#3b82f6' },
   { id: 'guapa',               name: 'Guapa',               color: '#a855f7' },
+  { id: 'taco-montes-claros',  name: 'Taco Montes Claros',  color: '#14b8a6' },
+  { id: 'valenze',             name: 'Valenze',             color: '#f43f5e' },
+  { id: 'americos-calcados',   name: 'Américos Calçados 3', color: '#eab308' },
+  { id: 'americos-calcados-2', name: 'Américos Calçados 2', color: '#06b6d4' },
+  { id: 'americos-calcados-3', name: 'Américos Calçados 4', color: '#8b5cf6' },
 ];
 
 interface Props {
