@@ -12,7 +12,10 @@ interface Props {
   nome: string;
 }
 
-const CADENCIA_DIAS = 14;
+const CADENCIA_DIAS = 14; // padrão: quinzenal
+const CADENCIA_POR_GRUPO: Record<string, number> = {
+  lupo: 30, // Lupo é acompanhamento mensal, não quinzenal
+};
 
 type Status = 'nunca' | 'atrasada' | 'essa-semana' | 'proxima-semana' | 'em-dia';
 
@@ -66,7 +69,8 @@ function computeItem(groupId: string, groupName: string, store: { id: string; na
   }
 
   const ultima = reunioes[0].data;
-  const proximaISO = addDias(ultima, CADENCIA_DIAS);
+  const cadencia = CADENCIA_POR_GRUPO[groupId] ?? CADENCIA_DIAS;
+  const proximaISO = addDias(ultima, cadencia);
 
   const diasAtraso = Math.floor((new Date(hojeISO() + 'T12:00:00').getTime() - new Date(proximaISO + 'T12:00:00').getTime()) / 86_400_000);
   const status: Status =
@@ -245,7 +249,7 @@ export function AgendaView({ groups, nome }: Props) {
           <CalendarClock className="w-6 h-6 text-brand-purple" /> Agenda
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Acompanhamentos quinzenais — controle de quem já foi visto e quem está na fila.
+          Acompanhamentos quinzenais (mensal pra Lupo) — controle de quem já foi visto e quem está na fila.
         </p>
       </div>
 
