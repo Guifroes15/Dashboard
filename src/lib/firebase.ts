@@ -28,8 +28,11 @@ export function ensureAuth(): Promise<User | null> {
         try {
           const cred = await signInAnonymously(auth);
           resolve(cred.user);
-        } catch {
-          // Anonymous sign-in pode estar desabilitado no console do Firebase.
+        } catch (err) {
+          // Anonymous sign-in desabilitado no console do Firebase (Authentication
+          // → Sign-in method → Anonymous) faz toda escrita cair em "permission-denied"
+          // sem essa mensagem — loga aqui pra não ficar invisível no DevTools.
+          console.error('[ensureAuth] Falha no login anônimo do Firebase:', err);
           resolve(null);
         }
       });
