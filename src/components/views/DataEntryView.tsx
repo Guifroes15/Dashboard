@@ -1,8 +1,49 @@
 import React, { useState, useMemo } from 'react';
-import { PlusCircle, CheckCircle, AlertCircle, RefreshCw, Database } from 'lucide-react';
+import { PlusCircle, CheckCircle, AlertCircle, RefreshCw, Database, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { GroupData, MonthData } from '../../types';
 import { addOrUpdateMonthData, seedGroupsToFirestore } from '../../services/groupService';
 import { GROUPS } from '../../data';
+
+// Uma linha = um lançamento: grupoId,lojaId,chave,mes,faturamentoLoja,vendas,qtdVendas,mensagens,verba,conversao
+// chave no formato AAAA-MM (ex: 2026-07), mes no formato Abv/AA (ex: Jul/26)
+const CAMPOS_LOTE = ['groupId', 'storeId', 'chave', 'mes', 'faturamentoLoja', 'vendas', 'qtdVendas', 'mensagens', 'verba', 'conversao'] as const;
+
+interface LinhaLote {
+  raw: string;
+  ok: boolean;
+  erro?: string;
+  groupId?: string;
+  storeId?: string;
+  data?: MonthData;
+}
+
+function parseLinhaLote(raw: string): LinhaLote {
+  const partes = raw.split(',').map(p => p.trim());
+  if (partes.length !== CAMPOS_LOTE.length) {
+    return { raw, ok: false, erro: `esperava ${CAMPOS_LOTE.length} campos separados por vírgula, veio ${partes.length}` };
+  }
+  const [groupId, storeId, chave, mes, faturamentoLoja, vendas, qtdVendas, mensagens, verba, conversao] = partes;
+  if (!groupId || !storeId || !chave || !mes) {
+    return { raw, ok: false, erro: 'groupId, storeId, chave e mes são obrigatórios' };
+  }
+  const fat = parseFloat(faturamentoLoja) || 0;
+  const vnd = parseFloat(vendas) || 0;
+  const qtd = parseInt(qtdVendas) || 0;
+  return {
+    raw, ok: true, groupId, storeId,
+    data: {
+      mes, chave,
+      faturamentoLoja: fat,
+      vendas: vnd,
+      qtdVendas: qtd,
+      mensagens: parseInt(mensagens) || 0,
+      verba: parseFloat(verba) || 0,
+      conversao: parseFloat(conversao) || 0,
+      ticketMedio: qtd > 0 ? parseFloat((vnd / qtd).toFixed(2)) : 0,
+      pctAureFat: fat > 0 ? parseFloat((vnd / fat * 100).toFixed(2)) : 0,
+    },
+  };
+}
 
 const MONTHS = [
   { label: 'Janeiro',   short: 'Jan', num: '01' },
@@ -47,6 +88,39 @@ export function DataEntryView({ groups, seeded, isMaster }: Props) {
   const [errorMsg, setErrorMsg] = useState('');
   const [seeding, setSeeding]   = useState(false);
   const [seedDone, setSeedDone] = useState(false);
+
+  // Importação em lote — cola várias linhas de uma vez em vez de preencher o
+  // formulário loja por loja.
+  const [loteAberto, setLoteAberto]     = useState(false);
+  const [loteTexto, setLoteTexto]       = useState('');
+  const [loteRodando, setLoteRodando]   = useState(false);
+  const [loteResultado, setLoteResultado] = useState<{ linha: string; ok: boolean; msg: string }[] | null>(null);
+
+  const importarLote = async () => {
+    const linhas = loteTexto.split('\n').map(l => l.trim()).filter(Boolean);
+    if (linhas.length === 0) return;
+
+    setLoteRodando(true);
+    setLoteResultado(null);
+    const resultados: { linha: string; ok: boolean; msg: string }[] = [];
+
+    for (const raw of linhas) {
+      const parsed = parseLinhaLote(raw);
+      if (!parsed.ok || !parsed.groupId || !parsed.storeId || !parsed.data) {
+        resultados.push({ linha: raw, ok: false, msg: parsed.erro ?? 'linha inválida' });
+        continue;
+      }
+      try {
+        await addOrUpdateMonthData(parsed.groupId, parsed.storeId, parsed.data);
+        resultados.push({ linha: raw, ok: true, msg: `${parsed.storeId} · ${parsed.data.mes} salvo` });
+      } catch (err) {
+        resultados.push({ linha: raw, ok: false, msg: err instanceof Error ? err.message : 'erro ao salvar' });
+      }
+    }
+
+    setLoteResultado(resultados);
+    setLoteRodando(false);
+  };
 
   const selectedGroup = groups.find((g) => g.id === groupId);
   const stores = selectedGroup?.stores ?? [];
@@ -144,6 +218,62 @@ export function DataEntryView({ groups, seeded, isMaster }: Props) {
         <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-3 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
           <p className="text-xs text-green-300 font-bold">Dados em tempo real — qualquer alteração é refletida para todos imediatamente.</p>
+        </div>
+      )}
+
+      {/* Importação em lote */}
+      {isMaster && (
+        <div className="bg-brand-medium border border-brand-light rounded-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setLoteAberto(v => !v)}
+            className="w-full flex items-center justify-between gap-3 p-4 text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <Upload className="w-4 h-4 text-brand-purple shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-white">Importar em lote</p>
+                <p className="text-[11px] text-gray-500">Cola várias linhas prontas e salva tudo de uma vez, sem preencher formulário por formulário.</p>
+              </div>
+            </div>
+            {loteAberto ? <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />}
+          </button>
+
+          {loteAberto && (
+            <div className="px-4 pb-4 space-y-3">
+              <p className="text-[11px] text-gray-500">
+                Um lançamento por linha, campos separados por vírgula:<br />
+                <code className="text-gray-400">grupoId,lojaId,chave(AAAA-MM),mes(Abv/AA),faturamentoLoja,vendas,qtdVendas,mensagens,verba,conversao</code>
+              </p>
+              <textarea
+                value={loteTexto}
+                onChange={e => setLoteTexto(e.target.value)}
+                placeholder="barbosa,zoom,2026-07,Jul/26,49658.18,10040.10,48,316,896.56,15.19"
+                rows={8}
+                className="w-full bg-brand-dark border border-brand-light rounded-xl px-3 py-2.5 text-xs font-mono text-white placeholder-gray-700 outline-none focus:border-brand-purple transition-colors"
+              />
+              <button
+                type="button"
+                onClick={importarLote}
+                disabled={loteRodando || !loteTexto.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-purple text-white text-xs font-bold hover:bg-brand-purple/90 transition-all disabled:opacity-40 cursor-pointer"
+              >
+                {loteRodando ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {loteRodando ? 'Importando…' : 'Importar tudo'}
+              </button>
+
+              {loteResultado && (
+                <div className="space-y-1 pt-1">
+                  {loteResultado.map((r, i) => (
+                    <div key={i} className={`flex items-start gap-2 text-[11px] px-2.5 py-1.5 rounded-lg ${r.ok ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300'}`}>
+                      {r.ok ? <CheckCircle className="w-3 h-3 shrink-0 mt-0.5" /> : <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />}
+                      <span className="flex-1 min-w-0 break-words">{r.msg}{!r.ok && <span className="text-red-400/70"> — {r.linha}</span>}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
