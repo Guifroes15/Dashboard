@@ -14,17 +14,22 @@ interface Props {
   onStoreClick: (id: string) => void;
 }
 
-const ALL_MONTHS = [
-  '2025-01','2025-02','2025-03','2025-04','2025-05','2025-06',
-  '2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
-  '2026-01','2026-02','2026-03','2026-04','2026-05',
-];
-const LABELS: Record<string, string> = {
-  '2025-01':'Jan/25','2025-02':'Fev/25','2025-03':'Mar/25','2025-04':'Abr/25',
-  '2025-05':'Mai/25','2025-06':'Jun/25','2025-07':'Jul/25','2025-08':'Ago/25',
-  '2025-09':'Set/25','2025-10':'Out/25','2025-11':'Nov/25','2025-12':'Dez/25',
-  '2026-01':'Jan/26','2026-02':'Fev/26','2026-03':'Mar/26','2026-04':'Abr/26','2026-05':'Mai/26',
-};
+// Gerada dinamicamente (2025 até o ano que vem) em vez de lista fixa, pra
+// nunca mais "parar" num mês por falta de atualização manual do código.
+const MESES_ABV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function gerarMeses(anoInicio: number, anoFim: number): { chave: string; label: string }[] {
+  const out: { chave: string; label: string }[] = [];
+  for (let ano = anoInicio; ano <= anoFim; ano++) {
+    for (let mes = 0; mes < 12; mes++) {
+      const mm = String(mes + 1).padStart(2, '0');
+      out.push({ chave: `${ano}-${mm}`, label: `${MESES_ABV[mes]}/${String(ano).slice(2)}` });
+    }
+  }
+  return out;
+}
+const MESES_GERADOS = gerarMeses(2025, new Date().getFullYear() + 1);
+const ALL_MONTHS = MESES_GERADOS.map(m => m.chave);
+const LABELS: Record<string, string> = Object.fromEntries(MESES_GERADOS.map(m => [m.chave, m.label]));
 
 const containerVariants = {
   hidden: { opacity: 0 },
