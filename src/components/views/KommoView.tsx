@@ -1,10 +1,18 @@
 import React from 'react';
-import { RefreshCw, MessageCircle, Trophy, Clock, AlertCircle } from 'lucide-react';
+import { RefreshCw, MessageCircle, Trophy, Clock, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { GroupData } from '../../types';
 import { useKommoOverview, KommoStoreOverview } from '../../hooks/useKommoOverview';
 import { KOMMO_STORES } from '../../config/kommoStores';
 
 interface Props { groups: GroupData[] }
+
+function fmtTelefone(numero: string): string {
+  const digitos = numero.replace(/\D/g, '');
+  const semDDI = digitos.startsWith('55') ? digitos.slice(2) : digitos;
+  if (semDDI.length === 11) return `(${semDDI.slice(0, 2)}) ${semDDI.slice(2, 7)}-${semDDI.slice(7)}`;
+  if (semDDI.length === 10) return `(${semDDI.slice(0, 2)}) ${semDDI.slice(2, 6)}-${semDDI.slice(6)}`;
+  return numero;
+}
 
 function tempoRelativo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -44,20 +52,33 @@ function AccountRow({ account }: { account: KommoStoreOverview }) {
       )}
 
       {!error && status && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-brand-dark/50 rounded-lg p-2.5">
-            <p className="text-lg font-black text-green-400 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" />{status.ganhos}</p>
-            <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Vendas (planos ganhos)</p>
+        <>
+          <div className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 mb-2 ${
+            status.whatsappConectado ? 'bg-green-500/10 text-green-400' : 'bg-white/5 text-gray-500'
+          }`}>
+            {status.whatsappConectado
+              ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              : <XCircle className="w-3.5 h-3.5 shrink-0" />}
+            {status.whatsappConectado
+              ? <span>WhatsApp conectado{status.whatsappNumero ? ` · ${fmtTelefone(status.whatsappNumero)}` : ''}</span>
+              : <span>Sem WhatsApp conectado</span>}
           </div>
-          <div className="bg-brand-dark/50 rounded-lg p-2.5">
-            <p className="text-lg font-black text-white flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5 text-brand-purple" />{status.abertos}</p>
-            <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Negócios em aberto</p>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-brand-dark/50 rounded-lg p-2.5">
+              <p className="text-lg font-black text-green-400 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" />{status.ganhos}</p>
+              <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Vendas (planos ganhos)</p>
+            </div>
+            <div className="bg-brand-dark/50 rounded-lg p-2.5">
+              <p className="text-lg font-black text-white flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5 text-brand-purple" />{status.abertos}</p>
+              <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Negócios em aberto</p>
+            </div>
+            <div className="bg-brand-dark/50 rounded-lg p-2.5">
+              <p className="text-xs font-bold text-gray-300">{status.ultimaAtividade ? tempoRelativo(status.ultimaAtividade) : '—'}</p>
+              <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Última atividade</p>
+            </div>
           </div>
-          <div className="bg-brand-dark/50 rounded-lg p-2.5">
-            <p className="text-xs font-bold text-gray-300">{status.ultimaAtividade ? tempoRelativo(status.ultimaAtividade) : '—'}</p>
-            <p className="text-[9px] text-gray-600 uppercase tracking-wider mt-0.5">Última atividade</p>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

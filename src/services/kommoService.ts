@@ -4,6 +4,9 @@ export interface KommoStoreStatus {
   perdidos: number;
   abertos: number;
   ultimaAtividade: string | null; // ISO
+  whatsappConectado: boolean;
+  whatsappNumero: string | null;
+  whatsappUltimaMensagem: string | null; // ISO
 }
 
 export async function getKommoStoreStatus(storeId: string): Promise<KommoStoreStatus> {

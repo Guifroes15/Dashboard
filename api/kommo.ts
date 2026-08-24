@@ -33,9 +33,17 @@ export default async function handler(req: any, res: any) {
 
   try {
     const base = `https://${account.subdomain}.kommo.com/api/v4`;
-    const leadsRes = await fetch(`${base}/leads?limit=250&order[updated_at]=desc`, {
-      headers: { Authorization: `Bearer ${account.token}` },
-    });
+    const auth = { Authorization: `Bearer ${account.token}` };
+
+    const [leadsRes, unsortedRes] = await Promise.all([
+      fetch(`${base}/leads?limit=250&order[updated_at]=desc`, { headers: auth }),
+      // "unsorted" = mensagens/leads recém-chegados ainda não triados — é onde
+      // aparece a origem "com.amocrm.amocrmwa" (canal do WhatsApp), com o
+      // número conectado e quando a última mensagem chegou. Não existe um
+      // endpoint de "status da integração", então isso é a aproximação mais
+      // confiável: se chegou mensagem recente pelo WhatsApp, está conectado.
+      fetch(`${base}/leads/unsorted?limit=25`, { headers: auth }),
+    ]);
 
     if (!leadsRes.ok) {
       res.status(leadsRes.status).json({ error: `Kommo retornou ${leadsRes.status}` });
@@ -50,6 +58,22 @@ export default async function handler(req: any, res: any) {
     const abertos = leads.filter(l => !l.closed_at).length;
     const ultimaAtividadeUnix = leads.reduce((max, l) => Math.max(max, l.updated_at || 0), 0);
 
+    let whatsappConectado = false;
+    let whatsappNumero: string | null = null;
+    let whatsappUltimaMensagemUnix = 0;
+
+    if (unsortedRes.ok) {
+      const unsortedData = await unsortedRes.json();
+      const unsorted: any[] = unsortedData._embedded?.unsorted ?? [];
+      for (const u of unsorted) {
+        if (typeof u.source_name === 'string' && u.source_name.startsWith('com.amocrm.amocrmwa')) {
+          whatsappConectado = true;
+          whatsappNumero = u.metadata?.to ?? whatsappNumero;
+          whatsappUltimaMensagemUnix = Math.max(whatsappUltimaMensagemUnix, u.created_at || 0);
+        }
+      }
+    }
+
     res.status(200).json({
       total: leads.length,
       ganhos,
@@ -58,6 +82,11 @@ export default async function handler(req: any, res: any) {
       // Baseado só nos 250 leads mais recentes — suficiente pra "está ativo?"
       // e pra vendas recentes, mas não é o total histórico da conta.
       ultimaAtividade: ultimaAtividadeUnix ? new Date(ultimaAtividadeUnix * 1000).toISOString() : null,
+      whatsappConectado,
+      whatsappNumero,
+      // Só preenchido se whatsappConectado — última mensagem vista nos 25
+      // itens mais recentes da caixa de entrada não triada.
+      whatsappUltimaMensagem: whatsappUltimaMensagemUnix ? new Date(whatsappUltimaMensagemUnix * 1000).toISOString() : null,
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message ?? 'Erro ao consultar o Kommo' });
