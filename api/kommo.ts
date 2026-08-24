@@ -11,6 +11,26 @@
 // pra saber quais storeIds o front-end espera encontrar aqui.
 
 export default async function handler(req: any, res: any) {
+  // Diagnóstico temporário — não expõe tokens, só tamanho/bordas da string
+  // pra achar corrupção de copiar-colar na Vercel. Remover depois de resolvido.
+  if (req.query?.debug === '1') {
+    const raw = process.env.KOMMO_ACCOUNTS || '';
+    let parseOk = false;
+    let keys: string[] = [];
+    try {
+      keys = Object.keys(JSON.parse(raw || '{}'));
+      parseOk = true;
+    } catch { /* mantém parseOk = false */ }
+    res.status(200).json({
+      length: raw.length,
+      inicio: raw.slice(0, 30),
+      fim: raw.slice(-30),
+      parseOk,
+      keys,
+    });
+    return;
+  }
+
   const storeId = typeof req.query?.storeId === 'string' ? req.query.storeId : '';
   if (!storeId) {
     res.status(400).json({ error: 'storeId é obrigatório' });
