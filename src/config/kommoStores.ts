@@ -5,5 +5,19 @@
 // Precisa bater exatamente com as chaves usadas em KOMMO_ACCOUNTS na Vercel —
 // adicione um storeId aqui só depois de configurar o token dele lá.
 export const KOMMO_STORES: string[] = [
-  // 'barbosa-calcados',
+  'amo-outlet',
+  'arezzo',
+  'b201',
+  'barbosa-calcados',
+  'carrano',
+  'democrata-rio-verde',
+  'ferracini-villa-romana',
+  'ferracini-piracicaba',
+  'flags',
+  'guapa',
+  'paralelas-dom-luis',
+  'paralelas-monumental',
+  'paralelas-reserva',
+  'sirigaita',
+  'zoom',
 ];
