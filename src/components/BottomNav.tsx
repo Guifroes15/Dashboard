@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, BarChart2, Store, Layers, X, ChevronRight, Home, Menu,
-  MessageSquare, Zap, Crown, PlusCircle, Send, Wallet, Sun, Users, CalendarClock, Rocket,
+  MessageSquare, Zap, Crown, PlusCircle, Send, Wallet,
 } from 'lucide-react';
 import { GroupData } from '../types';
 import { ActiveView } from '../App';
@@ -54,16 +54,7 @@ export function BottomNav({ groups, activeGroupId, activeView, isMaster, isStaff
         { label: 'Lançar Resultado', view: { type: 'data-entry' }    as ActiveView, icon: PlusCircle },
         { label: 'Feedbacks Meta',   view: { type: 'meta-feedback' } as ActiveView, icon: Send },
         { label: 'Saldo Meta Ads',   view: { type: 'meta-balance' }  as ActiveView, icon: Wallet },
-        { label: 'Resumo Diário',    view: { type: 'daily-summary' } as ActiveView, icon: Sun },
-        { label: 'Agenda',           view: { type: 'agenda' }        as ActiveView, icon: CalendarClock },
-        { label: 'Onboarding',       view: { type: 'onboarding' }    as ActiveView, icon: Rocket },
         { label: 'Msgs vs. Conversão', view: { type: 'ranking' }     as ActiveView, icon: BarChart2 },
-      ],
-    }] : []),
-    ...(isMaster ? [{
-      label: 'Administração',
-      items: [
-        { label: 'Usuários', view: { type: 'users' } as ActiveView, icon: Users },
       ],
     }] : []),
     ...(clienteComMetaAds ? [{

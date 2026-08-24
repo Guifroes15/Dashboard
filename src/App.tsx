@@ -17,10 +17,6 @@ import { DataEntryView }   from './components/views/DataEntryView';
 import { MetaAdsView }     from './components/views/MetaAdsView';
 import { MetaFeedbackView } from './components/views/MetaFeedbackView';
 import { MetaBalanceView } from './components/views/MetaBalanceView';
-import { DailySummaryView } from './components/views/DailySummaryView';
-import { AgendaView }      from './components/views/AgendaView';
-import { OnboardingView }  from './components/views/OnboardingView';
-import { UsersAdminView }  from './components/views/UsersAdminView';
 import { useGroups }       from './hooks/useGroups';
 import { useAuth, profileToAccessState } from './hooks/useAuth';
 import { motion, AnimatePresence } from 'motion/react';
@@ -36,10 +32,6 @@ export type ActiveView =
   | { type: 'meta-ads' }
   | { type: 'meta-feedback' }
   | { type: 'meta-balance' }
-  | { type: 'daily-summary' }
-  | { type: 'agenda' }
-  | { type: 'onboarding' }
-  | { type: 'users' }
   | { type: 'store'; storeId: string; tab?: 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes' };
 
 const SESSION_KEY = 'aure_access';
@@ -174,19 +166,15 @@ export default function App() {
     : activeView.type === 'meta-ads'    ? 'Meta Ads'
     : activeView.type === 'meta-feedback' ? 'Feedbacks Meta'
     : activeView.type === 'meta-balance'  ? 'Saldo Meta Ads'
-    : activeView.type === 'daily-summary' ? 'Resumo Diário'
-    : activeView.type === 'agenda'       ? 'Agenda'
-    : activeView.type === 'onboarding'   ? 'Onboarding'
-    : activeView.type === 'users'       ? 'Usuários'
     : activeView.type === 'consolidado' ? (activeGroup?.name ?? '')
     : activeView.type === 'ranking'     ? 'Ranking'
     : activeStore?.name ?? '—';
 
   useEffect(() => {
-    if (!isMaster && ['atendimento', 'criativos', 'vip', 'users'].includes(activeView.type)) {
+    if (!isMaster && ['atendimento', 'criativos', 'vip'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
-    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback' || activeView.type === 'daily-summary' || activeView.type === 'agenda' || activeView.type === 'onboarding')) {
+    if (!isMaster && !isStaff && (activeView.type === 'data-entry' || activeView.type === 'meta-ads' || activeView.type === 'meta-feedback')) {
       setActiveView({ type: 'home' });
     }
     if (!isMaster && !isStaff && !clienteComMetaAds && activeView.type === 'meta-balance') {
@@ -315,10 +303,6 @@ export default function App() {
               {isMaster && activeView.type === 'criativos'   && <CriativosView />}
               {isMaster && activeView.type === 'vip'         && <VipView />}
 
-              {isMaster && activeView.type === 'users' && (
-                <UsersAdminView groups={groups} />
-              )}
-
               {(isMaster || isStaff) && activeView.type === 'data-entry' && (
                 <DataEntryView groups={visibleGroups} seeded={seeded} isMaster={isMaster} />
               )}
@@ -329,18 +313,6 @@ export default function App() {
 
               {(isMaster || isStaff || clienteComMetaAds) && activeView.type === 'meta-balance' && (
                 <MetaBalanceView groups={visibleGroups} />
-              )}
-
-              {(isMaster || isStaff) && activeView.type === 'daily-summary' && (
-                <DailySummaryView groups={visibleGroups} />
-              )}
-
-              {(isMaster || isStaff) && activeView.type === 'agenda' && (
-                <AgendaView groups={visibleGroups} nome={nomeUsuario} />
-              )}
-
-              {(isMaster || isStaff) && activeView.type === 'onboarding' && (
-                <OnboardingView groups={visibleGroups} />
               )}
 
               {activeView.type === 'consolidado' && activeGroup.stores.length === 0 && <EmptyGroupView group={activeGroup} />}
