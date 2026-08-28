@@ -11,12 +11,14 @@ import { RoiPanel } from '../ui/RoiPanel';
 import { MonthFilter } from '../ui/MonthFilter';
 import { SimuladorView } from './SimuladorView';
 import { OtimizacoesView } from './OtimizacoesView';
-import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users, Wrench } from 'lucide-react';
+import { DollarSign, Percent, MessageSquare, TrendingUp, BarChart2, Calculator, Info, Calendar, Target, RefreshCw, Eye, MousePointer, ThumbsUp, AlertCircle, Users, Wrench, Wallet, MessageCircle as MessageCircleIcon, Trophy } from 'lucide-react';
 import { formatBRL, calcRoi, ultimoMes } from '../../utils';
 import { useGestao } from '../../hooks/useGestao';
 import { getAdAccountId } from '../../config/metaAccounts';
-import { MetaDateRange, MetaInsights, MetaDailyInsight, MetaCampaign, getAccountInsights, getAccountTimeSeries, getCampaigns } from '../../services/metaService';
+import { MetaDateRange, MetaInsights, MetaDailyInsight, MetaCampaign, MetaAccountBalance, getAccountInsights, getAccountTimeSeries, getCampaigns, getAccountBalance } from '../../services/metaService';
 import { DateRangePicker } from '../ui/DateRangePicker';
+import { KOMMO_STORES } from '../../config/kommoStores';
+import { getKommoStoreStatus, KommoStoreStatus } from '../../services/kommoService';
 
 type Tab = 'visao' | 'simulador' | 'meta-ads' | 'otimizacoes';
 
@@ -73,6 +75,28 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
 
   const adAccountId   = getAdAccountId(store);
   const canSeeMetaAds = (isMaster || isStaff || podeVerMetaAds) && !!adAccountId;
+
+  // Resumo operacional (saldo Meta + status Kommo) — só pra equipe interna,
+  // mesmo critério de quem vê Saldo Meta Ads / Kommo no menu. Cliente não vê,
+  // mesmo o Ferracini que já vê a aba Meta Ads completa.
+  const podeVerResumoOperacional = isMaster || isStaff;
+  const temKommo = KOMMO_STORES.includes(store.id);
+
+  const [saldoMeta, setSaldoMeta]         = useState<MetaAccountBalance | null>(null);
+  const [saldoMetaErro, setSaldoMetaErro] = useState<string | null>(null);
+  const [kommoStatus, setKommoStatus]     = useState<KommoStoreStatus | null>(null);
+  const [kommoErro, setKommoErro]         = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!podeVerResumoOperacional) return;
+    if (adAccountId) {
+      getAccountBalance(adAccountId).then(setSaldoMeta).catch(err => setSaldoMetaErro(err.message));
+    }
+    if (temKommo) {
+      getKommoStoreStatus(store.id).then(setKommoStatus).catch(err => setKommoErro(err.message));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.id, podeVerResumoOperacional]);
 
   // Meta Ads state
   const [metaDateRange, setMetaDateRange]   = useState<MetaDateRange>({ preset: 'last_30d' });
@@ -371,6 +395,55 @@ export function StoreDetailView({ store, fee, isMaster = false, isStaff = false,
               <RoiPanel store={storeFiltered} fee={fee} />
             </motion.div>
           </motion.div>
+
+          {/* Resumo operacional — saldo Meta + status Kommo, só pra equipe interna */}
+          {podeVerResumoOperacional && (adAccountId || temKommo) && (
+            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {adAccountId && (
+                <div className="bg-brand-medium border border-brand-light rounded-xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wallet className="w-4 h-4 text-brand-purple" />
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Saldo Meta Ads</h3>
+                  </div>
+                  {saldoMetaErro && <p className="text-[11px] text-red-400">{saldoMetaErro}</p>}
+                  {!saldoMetaErro && !saldoMeta && <p className="text-[11px] text-gray-600 italic">Carregando…</p>}
+                  {saldoMeta && (
+                    saldoMeta.temLimite ? (
+                      <p className="text-xl font-black text-white">
+                        {saldoMeta.saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider ml-2">restante</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">Conta sem limite definido (pós-paga)</p>
+                    )
+                  )}
+                </div>
+              )}
+              {temKommo && (
+                <div className="bg-brand-medium border border-brand-light rounded-xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MessageCircleIcon className="w-4 h-4 text-brand-purple" />
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Kommo</h3>
+                  </div>
+                  {kommoErro && <p className="text-[11px] text-red-400">{kommoErro}</p>}
+                  {!kommoErro && !kommoStatus && <p className="text-[11px] text-gray-600 italic">Carregando…</p>}
+                  {kommoStatus && (
+                    <div className="flex items-center gap-4">
+                      <p className="text-xl font-black text-green-400 flex items-center gap-1.5">
+                        <Trophy className="w-4 h-4" />{kommoStatus.ganhos}
+                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">vendas (30d)</span>
+                      </p>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                        kommoStatus.whatsappConectado ? 'bg-green-500/10 text-green-400' : 'bg-white/5 text-gray-500'
+                      }`}>
+                        {kommoStatus.whatsappConectado ? 'WhatsApp conectado' : 'Sem WhatsApp'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
 
           {/* Feedback da Operação */}
           <motion.div variants={itemVariants} className="bg-brand-medium border border-brand-light rounded-xl p-5 space-y-3">
