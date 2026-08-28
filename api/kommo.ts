@@ -40,40 +40,52 @@ export default async function handler(req: any, res: any) {
   const closedFrom = Math.floor(sinceDate.getTime() / 1000);
   const closedTo = Math.floor(untilDate.getTime() / 1000);
 
+  // Faz o fetch e só tenta ler como JSON se realmente vier corpo — a API do
+  // Kommo devolve 204 sem corpo quando a busca não acha nada (ex.: filtro de
+  // período sem nenhum negócio fechado), e chamar .json() nesse caso quebra
+  // com "Unexpected end of JSON input".
+  async function fetchJson(url: string, auth: Record<string, string>): Promise<{ ok: boolean; status: number; data: any }> {
+    const r = await fetch(url, { headers: auth });
+    const text = await r.text();
+    let data: any = null;
+    if (text) {
+      try { data = JSON.parse(text); } catch { /* corpo não era JSON, data fica null */ }
+    }
+    return { ok: r.ok, status: r.status, data };
+  }
+
   try {
     const base = `https://${account.subdomain}.kommo.com/api/v4`;
     const auth = { Authorization: `Bearer ${account.token}` };
 
-    const [recentRes, periodRes, unsortedRes] = await Promise.all([
+    const [recent, period, unsorted] = await Promise.all([
       // Estado atual (não depende do período escolhido): negócios em aberto,
       // última atividade e conexão do WhatsApp.
-      fetch(`${base}/leads?limit=250&order[updated_at]=desc`, { headers: auth }),
+      fetchJson(`${base}/leads?limit=250&order[updated_at]=desc`, auth),
       // Vendas dentro do período escolhido — filtra pela data de fechamento.
-      fetch(`${base}/leads?filter[closed_at][from]=${closedFrom}&filter[closed_at][to]=${closedTo}&limit=250`, { headers: auth }),
+      fetchJson(`${base}/leads?filter[closed_at][from]=${closedFrom}&filter[closed_at][to]=${closedTo}&limit=250`, auth),
       // "unsorted" = mensagens/leads recém-chegados ainda não triados — é onde
       // aparece a origem "com.amocrm.amocrmwa" (canal do WhatsApp), com o
       // número conectado e quando a última mensagem chegou. Não existe um
       // endpoint de "status da integração", então isso é a aproximação mais
       // confiável: se chegou mensagem recente pelo WhatsApp, está conectado.
-      fetch(`${base}/leads/unsorted?limit=25`, { headers: auth }),
+      fetchJson(`${base}/leads/unsorted?limit=25`, auth),
     ]);
 
-    if (!recentRes.ok) {
-      res.status(recentRes.status).json({ error: `Kommo retornou ${recentRes.status}` });
+    if (!recent.ok) {
+      res.status(recent.status).json({ error: `Kommo retornou ${recent.status}` });
       return;
     }
 
-    const recentData = await recentRes.json();
-    const recentLeads: any[] = recentData._embedded?.leads ?? [];
+    const recentLeads: any[] = recent.data?._embedded?.leads ?? [];
     const abertos = recentLeads.filter(l => !l.closed_at).length;
     const ultimaAtividadeUnix = recentLeads.reduce((max, l) => Math.max(max, l.updated_at || 0), 0);
 
     let ganhos = 0;
     let perdidos = 0;
     let valorGanho = 0;
-    if (periodRes.ok) {
-      const periodData = await periodRes.json();
-      const periodLeads: any[] = periodData._embedded?.leads ?? [];
+    if (period.ok) {
+      const periodLeads: any[] = period.data?._embedded?.leads ?? [];
       for (const l of periodLeads) {
         if (!l.closed_at) continue;
         if (l.loss_reason_id) perdidos++;
@@ -85,10 +97,9 @@ export default async function handler(req: any, res: any) {
     let whatsappNumero: string | null = null;
     let whatsappUltimaMensagemUnix = 0;
 
-    if (unsortedRes.ok) {
-      const unsortedData = await unsortedRes.json();
-      const unsorted: any[] = unsortedData._embedded?.unsorted ?? [];
-      for (const u of unsorted) {
+    if (unsorted.ok) {
+      const unsortedItems: any[] = unsorted.data?._embedded?.unsorted ?? [];
+      for (const u of unsortedItems) {
         if (typeof u.source_name === 'string' && u.source_name.startsWith('com.amocrm.amocrmwa')) {
           whatsappConectado = true;
           whatsappNumero = u.metadata?.to ?? whatsappNumero;
