@@ -1,5 +1,8 @@
-const BASE  = 'https://graph.facebook.com/v21.0';
-const TOKEN = import.meta.env.VITE_META_ACCESS_TOKEN as string;
+// As chamadas passam por /api/meta (function no servidor) em vez de bater
+// direto na Graph API — o token não fica mais exposto no bundle do navegador.
+function graphPath(path: string): string {
+  return `/api/meta?path=${encodeURIComponent(path)}`;
+}
 
 export type DatePreset = 'today' | 'yesterday' | 'last_7d' | 'last_14d' | 'last_30d' | 'this_month' | 'last_month';
 
@@ -62,7 +65,7 @@ export async function getAccountInsights(
   range: MetaDateRange
 ): Promise<MetaInsights | null> {
   const fields = 'spend,reach,impressions,clicks,actions,cost_per_action_type';
-  const url = `${BASE}/${adAccountId}/insights?fields=${fields}&${dateRangeParam(range)}&access_token=${TOKEN}`;
+  const url = graphPath(`/${adAccountId}/insights?fields=${fields}&${dateRangeParam(range)}`);
   const json = await apiFetch(url);
   const d = json.data?.[0];
   if (!d) return null;
@@ -84,7 +87,7 @@ export async function getAccountTimeSeries(
   adAccountId: string,
   range: MetaDateRange
 ): Promise<MetaDailyInsight[]> {
-  const url = `${BASE}/${adAccountId}/insights?fields=spend,reach,actions&${dateRangeParam(range)}&time_increment=1&access_token=${TOKEN}`;
+  const url = graphPath(`/${adAccountId}/insights?fields=spend,reach,actions&${dateRangeParam(range)}&time_increment=1`);
   const json = await apiFetch(url);
   return (json.data ?? []).map((d: any) => ({
     date:      d.date_start,
@@ -103,7 +106,7 @@ export async function getCampaigns(
     ? `insights.time_range(${JSON.stringify({ since: range.since, until: range.until })})`
     : `insights.date_preset(${range.preset})`;
   const fields = `id,name,effective_status,${insightsEdge}{${insFields}}`;
-  const url = `${BASE}/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=20&access_token=${TOKEN}`;
+  const url = graphPath(`/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=20`);
   const json = await apiFetch(url);
 
   return (json.data ?? []).map((c: any) => {
@@ -136,7 +139,7 @@ export interface MetaAccountBalance {
 // Contas sem spend_cap definido são pós-pagas — não têm "saldo" no sentido de recarga.
 export async function getAccountBalance(adAccountId: string): Promise<MetaAccountBalance> {
   const fields = 'currency,amount_spent,spend_cap,balance';
-  const url = `${BASE}/${adAccountId}?fields=${fields}&access_token=${TOKEN}`;
+  const url = graphPath(`/${adAccountId}?fields=${fields}`);
   const d = await apiFetch(url);
 
   const amountSpent = parseInt(d.amount_spent ?? '0', 10);
@@ -186,7 +189,7 @@ export async function getAccountFeedbackData(
 ): Promise<FeedbackData | null> {
   const insFields = 'spend,reach,clicks,actions,cost_per_action_type,date_start,date_stop';
   const fields    = `id,name,objective,effective_status,insights.date_preset(last_7d){${insFields}}`;
-  const url = `${BASE}/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=50&access_token=${TOKEN}`;
+  const url = graphPath(`/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=50`);
   const json = await apiFetch(url);
 
   let candidates: any[] = json.data ?? [];
