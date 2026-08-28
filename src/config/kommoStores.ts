@@ -11,7 +11,6 @@ export const KOMMO_STORES: string[] = [
   'barbosa-calcados',
   'carrano',
   'democrata-rio-verde',
-  'ferracini-villa-romana',
   'ferracini-piracicaba',
   'flags',
   'guapa',

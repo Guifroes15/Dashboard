@@ -12,11 +12,8 @@ export const META_ACCOUNTS: Record<string, string> = {
   'paralelas-monumental': 'act_484251287405568',
   'paralelas-reserva':    'act_558018988137615',
 
-  // Grupo Ferracini
-  'ferracini-americana':    'act_1958680818101781',
-  'ferracini-valinhos':     'act_929794346367999',
+  // Grupo Ferracini (Americana, Valinhos e Villa Romana não são mais atendidas)
   'ferracini-piracicaba':   'act_1013886770432374',
-  'ferracini-villa-romana': 'act_1351413546644046',
 
   // Grupo Lupo
   'lupo-boa-vista':    'act_946974293600178',
@@ -39,6 +36,9 @@ export const META_ACCOUNTS: Record<string, string> = {
   'americos-calcados':   'act_1596462802205733',
   'americos-calcados-2': 'act_1447709487166465',
   'americos-calcados-3': 'act_1670310224049944',
+  'sonho-dos-pes-colatina':    'act_2196645040702961',
+  'sonho-dos-pes-linhares':    'act_1616937730154333',
+  'sonho-dos-pes-sao-mateus':  'act_1570496831486634',
 };
 
 // Lojas criadas via Onboarding levam o próprio act_ID direto no Firestore

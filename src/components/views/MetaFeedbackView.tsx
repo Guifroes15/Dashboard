@@ -15,11 +15,8 @@ const DISPLAY_NAMES: Record<string, string> = {
   'paralelas-dom-luis':   'Paralelas Dom Luís',
   'paralelas-monumental': 'Paralelas Monumental',
   'paralelas-reserva':    'Paralelas Reserva',
-  // Ferracini
-  'ferracini-americana':    'Ferracini Americana',
-  'ferracini-valinhos':     'Ferracini Valinhos',
+  // Ferracini (só Piracicaba continua ativa)
   'ferracini-piracicaba':   'Ferracini Piracicaba',
-  'ferracini-villa-romana': 'Ferracini Florianópolis',
   // Lupo
   'lupo-boa-vista':   'Lupo Boa Vista',
   'lupo-carrefour':   'Lupo Carrefour',
@@ -40,6 +37,9 @@ const DISPLAY_NAMES: Record<string, string> = {
   'americos-calcados':   'Américos Calçados 3',
   'americos-calcados-2': 'Américos Calçados 2',
   'americos-calcados-3': 'Américos Calçados 4',
+  'sonho-dos-pes-colatina':   'Sonho dos Pés - Colatina',
+  'sonho-dos-pes-linhares':   'Sonho dos Pés - Linhares',
+  'sonho-dos-pes-sao-mateus': 'Sonho dos Pés - São Mateus',
 };
 
 // Contas com múltiplas lojas: cada loja filtra por keyword no nome de campanha

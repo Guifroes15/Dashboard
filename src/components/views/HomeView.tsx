@@ -12,16 +12,19 @@ import { GROUPS } from '../../data';
 // Contas mapeadas em metaAccounts.ts que ainda não têm loja cadastrada no dashboard
 // Cada uma vira seu próprio grupo (loja avulsa, sem agrupar sob um "Clientes Avulsos" compartilhado)
 const AVULSOS_STORES = [
-  { id: 'amo-outlet',          name: 'Amo Outlet',          color: '#f97316' },
-  { id: 'anjo-colours',        name: 'Anjo Colours',        color: '#ec4899' },
-  { id: 'carrano',             name: 'Carrano',             color: '#22c55e' },
-  { id: 'democrata-rio-verde', name: 'Democrata Rio Verde', color: '#3b82f6' },
-  { id: 'guapa',               name: 'Guapa',               color: '#a855f7' },
-  { id: 'taco-montes-claros',  name: 'Taco Montes Claros',  color: '#14b8a6' },
-  { id: 'valenze',             name: 'Valenze',             color: '#f43f5e' },
-  { id: 'americos-calcados',   name: 'Américos Calçados 3', color: '#eab308' },
-  { id: 'americos-calcados-2', name: 'Américos Calçados 2', color: '#06b6d4' },
-  { id: 'americos-calcados-3', name: 'Américos Calçados 4', color: '#8b5cf6' },
+  { id: 'amo-outlet',          name: 'Amo Outlet',          color: '#f97316', fee: 1950 },
+  { id: 'anjo-colours',        name: 'Anjo Colours',        color: '#ec4899', fee: 2000 },
+  { id: 'carrano',             name: 'Carrano',             color: '#22c55e', fee: 2446 },
+  { id: 'democrata-rio-verde', name: 'Democrata Rio Verde', color: '#3b82f6', fee: 1500 },
+  { id: 'guapa',               name: 'Guapa',               color: '#a855f7', fee: 1125 },
+  { id: 'taco-montes-claros',  name: 'Taco Montes Claros',  color: '#14b8a6', fee: 1500 },
+  { id: 'valenze',             name: 'Valenze',             color: '#f43f5e', fee: 2597 },
+  { id: 'americos-calcados',   name: 'Américos Calçados 3', color: '#eab308', fee: 2597 },
+  { id: 'americos-calcados-2', name: 'Américos Calçados 2', color: '#06b6d4', fee: 2597 },
+  { id: 'americos-calcados-3', name: 'Américos Calçados 4', color: '#8b5cf6', fee: 2597 },
+  { id: 'sonho-dos-pes-colatina',   name: 'Sonho dos Pés - Colatina',   color: '#ef4444', fee: 2200 },
+  { id: 'sonho-dos-pes-linhares',   name: 'Sonho dos Pés - Linhares',   color: '#0ea5e9', fee: 2200 },
+  { id: 'sonho-dos-pes-sao-mateus', name: 'Sonho dos Pés - São Mateus', color: '#84cc16', fee: 2200 },
 ];
 
 interface Props {
@@ -122,8 +125,8 @@ export function HomeView({ groups, onNavigate, nome = '', isMaster = false, isSt
     label: s.name,
     // Cada avulsa vira seu próprio grupo com uma única loja — tudo num write só.
     add: () => createGroupIfMissing({
-      id: s.id, name: s.name, color: s.color, fee: 0,
-      stores: [{ id: s.id, name: s.name, color: s.color, historico: [], planos: [] }],
+      id: s.id, name: s.name, color: s.color, fee: s.fee,
+      stores: [{ id: s.id, name: s.name, color: s.color, fee: s.fee, historico: [], planos: [] }],
     }),
   }));
 
