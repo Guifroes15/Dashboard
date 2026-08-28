@@ -31,12 +31,25 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // Período das vendas (data de fechamento do negócio) — vem do front como
+  // YYYY-MM-DD. Sem período informado, cai nos últimos 30 dias.
+  const sinceParam = typeof req.query?.since === 'string' ? req.query.since : null;
+  const untilParam = typeof req.query?.until === 'string' ? req.query.until : null;
+  const untilDate = untilParam ? new Date(`${untilParam}T23:59:59-03:00`) : new Date();
+  const sinceDate = sinceParam ? new Date(`${sinceParam}T00:00:00-03:00`) : new Date(untilDate.getTime() - 29 * 86_400_000);
+  const closedFrom = Math.floor(sinceDate.getTime() / 1000);
+  const closedTo = Math.floor(untilDate.getTime() / 1000);
+
   try {
     const base = `https://${account.subdomain}.kommo.com/api/v4`;
     const auth = { Authorization: `Bearer ${account.token}` };
 
-    const [leadsRes, unsortedRes] = await Promise.all([
+    const [recentRes, periodRes, unsortedRes] = await Promise.all([
+      // Estado atual (não depende do período escolhido): negócios em aberto,
+      // última atividade e conexão do WhatsApp.
       fetch(`${base}/leads?limit=250&order[updated_at]=desc`, { headers: auth }),
+      // Vendas dentro do período escolhido — filtra pela data de fechamento.
+      fetch(`${base}/leads?filter[closed_at][from]=${closedFrom}&filter[closed_at][to]=${closedTo}&limit=250`, { headers: auth }),
       // "unsorted" = mensagens/leads recém-chegados ainda não triados — é onde
       // aparece a origem "com.amocrm.amocrmwa" (canal do WhatsApp), com o
       // número conectado e quando a última mensagem chegou. Não existe um
@@ -45,18 +58,28 @@ export default async function handler(req: any, res: any) {
       fetch(`${base}/leads/unsorted?limit=25`, { headers: auth }),
     ]);
 
-    if (!leadsRes.ok) {
-      res.status(leadsRes.status).json({ error: `Kommo retornou ${leadsRes.status}` });
+    if (!recentRes.ok) {
+      res.status(recentRes.status).json({ error: `Kommo retornou ${recentRes.status}` });
       return;
     }
 
-    const data = await leadsRes.json();
-    const leads: any[] = data._embedded?.leads ?? [];
+    const recentData = await recentRes.json();
+    const recentLeads: any[] = recentData._embedded?.leads ?? [];
+    const abertos = recentLeads.filter(l => !l.closed_at).length;
+    const ultimaAtividadeUnix = recentLeads.reduce((max, l) => Math.max(max, l.updated_at || 0), 0);
 
-    const ganhos = leads.filter(l => l.closed_at && !l.loss_reason_id).length;
-    const perdidos = leads.filter(l => l.closed_at && l.loss_reason_id).length;
-    const abertos = leads.filter(l => !l.closed_at).length;
-    const ultimaAtividadeUnix = leads.reduce((max, l) => Math.max(max, l.updated_at || 0), 0);
+    let ganhos = 0;
+    let perdidos = 0;
+    let valorGanho = 0;
+    if (periodRes.ok) {
+      const periodData = await periodRes.json();
+      const periodLeads: any[] = periodData._embedded?.leads ?? [];
+      for (const l of periodLeads) {
+        if (!l.closed_at) continue;
+        if (l.loss_reason_id) perdidos++;
+        else { ganhos++; valorGanho += l.price || 0; }
+      }
+    }
 
     let whatsappConectado = false;
     let whatsappNumero: string | null = null;
@@ -75,12 +98,12 @@ export default async function handler(req: any, res: any) {
     }
 
     res.status(200).json({
-      total: leads.length,
+      periodo: { desde: sinceDate.toISOString(), ate: untilDate.toISOString() },
       ganhos,
       perdidos,
+      valorGanho,
+      // Estado atual da conta, independente do período escolhido:
       abertos,
-      // Baseado só nos 250 leads mais recentes — suficiente pra "está ativo?"
-      // e pra vendas recentes, mas não é o total histórico da conta.
       ultimaAtividade: ultimaAtividadeUnix ? new Date(ultimaAtividadeUnix * 1000).toISOString() : null,
       whatsappConectado,
       whatsappNumero,

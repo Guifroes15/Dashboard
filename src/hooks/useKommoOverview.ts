@@ -14,7 +14,7 @@ export interface KommoStoreOverview {
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
-export function useKommoOverview(groups: GroupData[]) {
+export function useKommoOverview(groups: GroupData[], since?: string, until?: string) {
   const [accounts, setAccounts] = useState<KommoStoreOverview[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,9 +22,10 @@ export function useKommoOverview(groups: GroupData[]) {
     .flatMap(g => g.stores.map(s => ({ ...s, groupName: g.name })))
     .filter(s => KOMMO_STORES.includes(s.id));
 
-  // Escopado pelas lojas visíveis nesse login — mesmo cuidado do bug já
-  // corrigido no saldo do Meta Ads (cache vazando entre logins diferentes).
-  const cacheKey = `aure_kommo_overview_v1_${storesComKommo.map(s => s.id).sort().join(',')}`;
+  // Escopado pelas lojas visíveis nesse login E pelo período escolhido —
+  // mesmo cuidado do bug já corrigido no saldo do Meta Ads (cache vazando
+  // entre logins/filtros diferentes).
+  const cacheKey = `aure_kommo_overview_v2_${since ?? ''}_${until ?? ''}_${storesComKommo.map(s => s.id).sort().join(',')}`;
 
   const load = useCallback(async (force = false) => {
     if (storesComKommo.length === 0) return;
@@ -46,7 +47,7 @@ export function useKommoOverview(groups: GroupData[]) {
     const results = await Promise.allSettled(
       storesComKommo.map(async (s): Promise<KommoStoreOverview> => {
         try {
-          const status = await getKommoStoreStatus(s.id);
+          const status = await getKommoStoreStatus(s.id, since, until);
           return { storeId: s.id, storeName: s.name, storeColor: s.color, groupName: s.groupName, status };
         } catch (err) {
           return {
@@ -65,7 +66,7 @@ export function useKommoOverview(groups: GroupData[]) {
     setLoading(false);
     sessionStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), data }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups]);
+  }, [groups, since, until]);
 
   useEffect(() => { load(); }, [load]);
 
