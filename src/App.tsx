@@ -18,6 +18,7 @@ import { MetaAdsView }     from './components/views/MetaAdsView';
 import { MetaFeedbackView } from './components/views/MetaFeedbackView';
 import { MetaBalanceView } from './components/views/MetaBalanceView';
 import { KommoView }       from './components/views/KommoView';
+import { PEDRO_ACCOUNTS }  from './config/pedroAccounts';
 import { useGroups }       from './hooks/useGroups';
 import { useAuth, profileToAccessState } from './hooks/useAuth';
 import { motion, AnimatePresence } from 'motion/react';
@@ -140,6 +141,25 @@ export default function App() {
     root.classList.toggle('theme-ferracini', temaFerracini);
   }, [temaFerracini]);
 
+  // Acesso restrito (ex.: Pedro Reis) — só Feedbacks Meta + Saldo, com lista
+  // própria de contas que não fazem parte dos grupos/lojas da Aure.
+  const acessoRestrito = access?.escopoRestrito === 'feedback-saldo';
+  const pedroVirtualGroup: GroupData = {
+    id: 'contas-externas', name: 'Contas externas', color: '#7c3aed', fee: 0,
+    stores: PEDRO_ACCOUNTS.map(a => ({
+      id: a.id, name: a.name, color: a.color, metaAccountId: a.metaAccountId,
+      historico: [], planos: [],
+    })),
+  };
+  const pedroFeedbackAccounts = PEDRO_ACCOUNTS.map(a => ({ key: a.id, name: a.name, accountId: a.metaAccountId }));
+
+  useEffect(() => {
+    if (acessoRestrito && activeView.type !== 'meta-feedback' && activeView.type !== 'meta-balance') {
+      setActiveView({ type: 'meta-feedback' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acessoRestrito]);
+
   useEffect(() => {
     if (visibleGroups.length > 0 && !activeGroupId) {
       setActiveGroupId(visibleGroups[0].id);
@@ -174,6 +194,7 @@ export default function App() {
     : activeStore?.name ?? '—';
 
   useEffect(() => {
+    if (acessoRestrito) return; // tem o próprio guard, logo acima
     if (!isMaster && ['atendimento', 'criativos', 'vip'].includes(activeView.type)) {
       setActiveView({ type: 'home' });
     }
@@ -183,7 +204,7 @@ export default function App() {
     if (!isMaster && !isStaff && !clienteComMetaAds && activeView.type === 'meta-balance') {
       setActiveView({ type: 'home' });
     }
-  }, [isMaster, isStaff, clienteComMetaAds, activeView.type]);
+  }, [isMaster, isStaff, clienteComMetaAds, acessoRestrito, activeView.type]);
 
   // ── Firebase verificando sessão ───────────────────────────────────────────
   if (authLoading) {
@@ -209,6 +230,51 @@ export default function App() {
         onAccess={handlePasswordAccess}
         onCreateAccount={() => setShowAuthView(true)}
       />
+    );
+  }
+
+  // ── Acesso restrito (Pedro Reis e afins) — layout próprio e enxuto,
+  // sem os grupos/lojas da Aure ─────────────────────────────────────────────
+  if (acessoRestrito) {
+    return (
+      <div className={`flex min-h-screen bg-brand-dark text-white ${theme}`}>
+        <main className="flex-1 min-h-screen">
+          <header className="sticky top-0 z-40 bg-brand-medium/95 backdrop-blur border-b border-brand-light px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-brand-purple">Aure Digital</span>
+              <span className="text-gray-700 text-xs">/</span>
+              <span className="text-xs text-gray-500">{nomeUsuario}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-brand-light rounded-lg p-0.5">
+                <button
+                  onClick={() => setActiveView({ type: 'meta-feedback' })}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${activeView.type === 'meta-feedback' ? 'bg-brand-purple text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  Feedbacks Meta
+                </button>
+                <button
+                  onClick={() => setActiveView({ type: 'meta-balance' })}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${activeView.type === 'meta-balance' ? 'bg-brand-purple text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  Saldo Meta Ads
+                </button>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-[10px] text-gray-600 hover:text-red-400 font-bold uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Sair
+              </button>
+            </div>
+          </header>
+
+          <div className="px-4 py-6 lg:p-10">
+            {activeView.type === 'meta-feedback' && <MetaFeedbackView accounts={pedroFeedbackAccounts} />}
+            {activeView.type === 'meta-balance' && <MetaBalanceView groups={[pedroVirtualGroup]} />}
+          </div>
+        </main>
+      </div>
     );
   }
 

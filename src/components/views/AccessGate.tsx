@@ -12,6 +12,7 @@ export const ACCESS_CONFIG: Record<string, {
   isMaster: boolean;
   isStaff: boolean;
   nome: string;
+  escopoRestrito?: 'feedback-saldo';
 }> = {
   // ── Você (acesso total + IA + saudação) ──────────────────────────────────
   'guilherme1202': {
@@ -49,6 +50,13 @@ export const ACCESS_CONFIG: Record<string, {
   'paralelas2026': { groupIds: ['paralelas'], isMaster: false, isStaff: false, nome: '' },
   'lupo2026':      { groupIds: ['lupo'],      isMaster: false, isStaff: false, nome: '' },
   'ferracini2026': { groupIds: ['ferracini'], isMaster: false, isStaff: false, nome: '' },
+
+  // ── Acesso restrito (só Feedbacks Meta + Saldo, com lista própria de
+  // contas — não vê os grupos/lojas da Aure) ────────────────────────────────
+  'Pedro123': {
+    groupIds: [], isMaster: false, isStaff: false, nome: 'Pedro Reis',
+    escopoRestrito: 'feedback-saldo',
+  },
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -57,6 +65,7 @@ export interface AccessState {
   isMaster: boolean;
   isStaff:  boolean;
   nome:     string;
+  escopoRestrito?: 'feedback-saldo';
 }
 
 interface Props {

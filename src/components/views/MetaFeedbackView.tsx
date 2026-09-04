@@ -59,7 +59,7 @@ const MULTI_STORE_KEYS = new Set(
   MULTI_STORE_GROUPS.flatMap(g => g.stores.map(s => s.key)),
 );
 
-interface StoreEntry {
+export interface StoreEntry {
   key:         string;
   name:        string;
   accountId:   string;
@@ -80,7 +80,9 @@ const MULTI_STORE_ENTRIES: StoreEntry[] = MULTI_STORE_GROUPS.flatMap(g =>
   g.stores.map(s => ({ ...s, accountId: g.accountId })),
 );
 
-const ALL_STORES: StoreEntry[] = [
+// Lista padrão — todos os clientes da Aure. Um acesso com escopo restrito
+// (ex.: Pedro Reis) passa sua própria lista via prop `accounts`.
+const DEFAULT_STORES: StoreEntry[] = [
   ...SINGLE_STORE_ENTRIES,
   ...MULTI_STORE_ENTRIES,
 ].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -140,9 +142,15 @@ function buildMessage(name: string, data: FeedbackData): string {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export function MetaFeedbackView() {
+interface Props {
+  accounts?: StoreEntry[]; // acesso restrito: lista própria em vez de todos os clientes da Aure
+}
+
+export function MetaFeedbackView({ accounts }: Props) {
+  const stores = accounts ?? DEFAULT_STORES;
+
   const [states, setStates] = useState<Record<string, StoreState>>(() =>
-    Object.fromEntries(ALL_STORES.map(s => [s.key, { status: 'idle' }])),
+    Object.fromEntries(stores.map(s => [s.key, { status: 'idle' }])),
   );
   const [copied, setCopied] = useState<Record<string, boolean>>({});
   const [running, setRunning] = useState(false);
@@ -153,10 +161,10 @@ export function MetaFeedbackView() {
 
   const fetchAll = useCallback(async () => {
     setRunning(true);
-    setStates(Object.fromEntries(ALL_STORES.map(s => [s.key, { status: 'loading' }])));
+    setStates(Object.fromEntries(stores.map(s => [s.key, { status: 'loading' }])));
 
     await Promise.all(
-      ALL_STORES.map(async ({ key, accountId, nameFilter }) => {
+      stores.map(async ({ key, accountId, nameFilter }) => {
         try {
           const data = await getAccountFeedbackData(accountId, nameFilter);
           setStore(key, data ? { status: 'done', data } : { status: 'empty' });
@@ -167,7 +175,8 @@ export function MetaFeedbackView() {
     );
 
     setRunning(false);
-  }, [setStore]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setStore, stores]);
 
   const copyText = (key: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -175,9 +184,9 @@ export function MetaFeedbackView() {
     setTimeout(() => setCopied(prev => ({ ...prev, [key]: false })), 2000);
   };
 
-  const doneCount  = ALL_STORES.filter(s => states[s.key]?.status === 'done').length;
-  const emptyCount = ALL_STORES.filter(s => states[s.key]?.status === 'empty').length;
-  const errorCount = ALL_STORES.filter(s => states[s.key]?.status === 'error').length;
+  const doneCount  = stores.filter(s => states[s.key]?.status === 'done').length;
+  const emptyCount = stores.filter(s => states[s.key]?.status === 'empty').length;
+  const errorCount = stores.filter(s => states[s.key]?.status === 'error').length;
 
   return (
     <div className="space-y-6">
@@ -210,7 +219,7 @@ export function MetaFeedbackView() {
 
       {/* Cards */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {ALL_STORES.map(({ key, name }) => {
+        {stores.map(({ key, name }) => {
           const state = states[key];
           const message = state.status === 'done' ? buildMessage(name, state.data) : '';
 
