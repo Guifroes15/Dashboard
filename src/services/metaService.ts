@@ -183,12 +183,18 @@ const RECONHECIMENTO_OBJ = new Set([
 ]);
 
 // nameFilter: keyword do nome da campanha (ex: 'PONTA NEGRA') — usado em contas multi-loja
+// range: período do feedback — default últimos 7 dias (usado pela Aure); o
+// acesso do Pedro passa a semana atual e a anterior pra montar o comparativo.
 export async function getAccountFeedbackData(
   adAccountId: string,
   nameFilter?: string,
+  range: MetaDateRange = { preset: 'last_7d' },
 ): Promise<FeedbackData | null> {
   const insFields = 'spend,reach,clicks,actions,cost_per_action_type,date_start,date_stop';
-  const fields    = `id,name,objective,effective_status,insights.date_preset(last_7d){${insFields}}`;
+  const insightsEdge = 'since' in range
+    ? `insights.time_range(${JSON.stringify({ since: range.since, until: range.until })})`
+    : `insights.date_preset(${range.preset})`;
+  const fields    = `id,name,objective,effective_status,${insightsEdge}{${insFields}}`;
   const url = graphPath(`/${adAccountId}/campaigns?fields=${encodeURIComponent(fields)}&limit=50`);
   const json = await apiFetch(url);
 

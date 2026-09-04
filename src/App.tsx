@@ -16,6 +16,7 @@ import { VipView }         from './components/views/VipView';
 import { DataEntryView }   from './components/views/DataEntryView';
 import { MetaAdsView }     from './components/views/MetaAdsView';
 import { MetaFeedbackView } from './components/views/MetaFeedbackView';
+import { PedroFeedbackView } from './components/views/PedroFeedbackView';
 import { MetaBalanceView } from './components/views/MetaBalanceView';
 import { KommoView }       from './components/views/KommoView';
 import { PEDRO_ACCOUNTS }  from './config/pedroAccounts';
@@ -270,7 +271,7 @@ export default function App() {
           </header>
 
           <div className="px-4 py-6 lg:p-10">
-            {activeView.type === 'meta-feedback' && <MetaFeedbackView accounts={pedroFeedbackAccounts} />}
+            {activeView.type === 'meta-feedback' && <PedroFeedbackView accounts={pedroFeedbackAccounts} />}
             {activeView.type === 'meta-balance' && <MetaBalanceView groups={[pedroVirtualGroup]} />}
           </div>
         </main>
