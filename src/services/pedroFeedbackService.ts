@@ -85,7 +85,8 @@ export function buildComparativoMessage(name: string, atual: FeedbackData, anter
   const sec = atual.secundaria ?? anterior?.secundaria ?? null;
   if (sec) {
     const tipo = atual.secundaria?.tipo ?? anterior?.secundaria?.tipo;
-    const secAnterior = anterior?.secundaria?.tipo === tipo ? anterior.secundaria : null;
+    const secAnteriorRaw = anterior?.secundaria;
+    const secAnterior = secAnteriorRaw?.tipo === tipo ? secAnteriorRaw : null;
 
     if (tipo === 'reconhecimento') {
       lines.push(``, `📣 Reconhecimento — Alcance`);

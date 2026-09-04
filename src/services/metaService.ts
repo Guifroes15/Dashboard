@@ -15,6 +15,20 @@ function dateRangeParam(range: MetaDateRange): string {
     : `date_preset=${range.preset}`;
 }
 
+// Os mesmos 7 dias do "últimos 7 dias", só que uma semana antes — usado pra
+// montar comparativos semana-a-semana nas mensagens de feedback.
+export function semanaAnterior(): { since: string; until: string } {
+  const hoje = new Date();
+  const toISO = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const addDias = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
+  return { since: toISO(addDias(hoje, -13)), until: toISO(addDias(hoje, -7)) };
+}
+
 export interface MetaInsights {
   spend:         number;
   reach:         number;

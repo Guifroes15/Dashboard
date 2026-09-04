@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Copy, Check, RefreshCw, MessageSquare } from 'lucide-react';
-import { getAccountFeedbackData, FeedbackData } from '../../services/metaService';
+import { getAccountFeedbackData, FeedbackData, semanaAnterior } from '../../services/metaService';
 import { buildComparativoMessage } from '../../services/pedroFeedbackService';
 
 interface Conta { key: string; name: string; accountId: string; nameFilter?: string }
@@ -12,21 +12,6 @@ type ContaState =
   | { status: 'done'; atual: FeedbackData; anterior: FeedbackData | null }
   | { status: 'empty' }
   | { status: 'error'; message: string };
-
-const toISO = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-const addDias = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
-
-// A semana atual usa o preset last_7d da própria Meta; a anterior é o mesmo
-// intervalo de 7 dias, só que uma semana antes.
-function semanaAnterior(): { since: string; until: string } {
-  const hoje = new Date();
-  return { since: toISO(addDias(hoje, -13)), until: toISO(addDias(hoje, -7)) };
-}
 
 export function PedroFeedbackView({ accounts }: Props) {
   const [states, setStates] = useState<Record<string, ContaState>>(() =>
