@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Copy, Check, RefreshCw, MessageSquare } from 'lucide-react';
 import { META_ACCOUNTS } from '../../config/metaAccounts';
-import { getAccountFeedbackData, FeedbackData, semanaAnterior } from '../../services/metaService';
+import { getAccountFeedbackData, FeedbackData } from '../../services/metaService';
 
 // Nome de exibição para cada chave do META_ACCOUNTS
 const DISPLAY_NAMES: Record<string, string> = {
@@ -92,7 +92,7 @@ const DEFAULT_STORES: StoreEntry[] = [
 type StoreState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'done'; data: FeedbackData; anterior: FeedbackData | null }
+  | { status: 'done'; data: FeedbackData }
   | { status: 'empty' }
   | { status: 'error'; message: string };
 
@@ -109,45 +109,31 @@ function fmtNumber(n: number): string {
   return n.toLocaleString('pt-BR');
 }
 
-// Acrescenta a comparação com a semana anterior no final da linha — sem
-// mudar nada do formato original, só adiciona o pedaço "(semana passada: ...)".
-function comparativo(anterior: number | null | undefined, atual: number, formatador: (v: number) => string): string {
-  if (anterior === null || anterior === undefined) return '';
-  if (anterior === 0) return atual > 0 ? ' (novo essa semana)' : '';
-  const delta = ((atual - anterior) / anterior) * 100;
-  const sinal = delta >= 0 ? '+' : '';
-  const deltaFmt = delta.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  return ` (semana passada: ${formatador(anterior)} | ${sinal}${deltaFmt}%)`;
-}
-
-function buildMessage(name: string, data: FeedbackData, anterior: FeedbackData | null): string {
+function buildMessage(name: string, data: FeedbackData): string {
   const dateRange = `(${fmtDate(data.dateStart)} a ${fmtDate(data.dateStop)})`;
   const lines: string[] = [
     `Olá pessoal! Excelente sexta-feira para todos!🚀`,
     `📆 Passando para mostrar os investimentos e resultados desses últimos 7 dias.`,
     dateRange,
     `🔵No Meta🔵`,
-    `Total Investido: R$ ${fmtBRL(data.totalSpend)}${comparativo(anterior?.totalSpend, data.totalSpend, v => `R$ ${fmtBRL(v)}`)}`,
+    `Total Investido: R$ ${fmtBRL(data.totalSpend)}`,
   ];
 
   if (data.mensagem) {
-    const m = data.mensagem;
-    lines.push(`💵Investimento Mensagem: R$ ${fmtBRL(m.spend)}${comparativo(anterior?.mensagem?.spend, m.spend, v => `R$ ${fmtBRL(v)}`)}`);
-    lines.push(`🎯 Mensagens: ${fmtNumber(m.mensagens)}${comparativo(anterior?.mensagem?.mensagens, m.mensagens, fmtNumber)}`);
-    lines.push(`💲Custo por mensagem: R$ ${fmtBRL(m.custoMensagem)}${comparativo(anterior?.mensagem?.custoMensagem, m.custoMensagem, v => `R$ ${fmtBRL(v)}`)}`);
+    lines.push(`💵Investimento Mensagem: R$ ${fmtBRL(data.mensagem.spend)}`);
+    lines.push(`🎯 Mensagens: ${fmtNumber(data.mensagem.mensagens)}`);
+    lines.push(`💲Custo por mensagem: R$ ${fmtBRL(data.mensagem.custoMensagem)}`);
   }
 
   if (data.secundaria) {
     const sec = data.secundaria;
-    const secAnteriorRaw = anterior?.secundaria;
-    const secAnterior = secAnteriorRaw?.tipo === sec.tipo ? secAnteriorRaw : null;
     if (sec.tipo === 'impulsionamento') {
-      lines.push(`💵Investimento Impulsionamento: R$ ${fmtBRL(sec.spend)}${comparativo(secAnterior?.spend, sec.spend, v => `R$ ${fmtBRL(v)}`)}`);
-      lines.push(`👀Visitas ao Perfil: ${fmtNumber(sec.visitasPerfil)}${comparativo(secAnterior?.visitasPerfil, sec.visitasPerfil, fmtNumber)}`);
-      lines.push(`💲Custo por Visita: R$ ${fmtBRL(sec.custoVisita)}${comparativo(secAnterior?.custoVisita, sec.custoVisita, v => `R$ ${fmtBRL(v)}`)}`);
+      lines.push(`💵Investimento Impulsionamento: R$ ${fmtBRL(sec.spend)}`);
+      lines.push(`👀Visitas ao Perfil: ${fmtNumber(sec.visitasPerfil)}`);
+      lines.push(`💲Custo por Visita: R$ ${fmtBRL(sec.custoVisita)}`);
     } else {
-      lines.push(`💵Investimento Reconhecimento: R$ ${fmtBRL(sec.spend)}${comparativo(secAnterior?.spend, sec.spend, v => `R$ ${fmtBRL(v)}`)}`);
-      lines.push(`👀Pessoas Alcançadas: ${fmtNumber(sec.pessoasAlcancadas)}${comparativo(secAnterior?.pessoasAlcancadas, sec.pessoasAlcancadas, fmtNumber)}`);
+      lines.push(`💵Investimento Reconhecimento: R$ ${fmtBRL(sec.spend)}`);
+      lines.push(`👀Pessoas Alcançadas: ${fmtNumber(sec.pessoasAlcancadas)}`);
     }
   }
 
@@ -177,16 +163,11 @@ export function MetaFeedbackView({ accounts }: Props) {
     setRunning(true);
     setStates(Object.fromEntries(stores.map(s => [s.key, { status: 'loading' }])));
 
-    const rangeAnterior = semanaAnterior();
-
     await Promise.all(
       stores.map(async ({ key, accountId, nameFilter }) => {
         try {
-          const [data, anterior] = await Promise.all([
-            getAccountFeedbackData(accountId, nameFilter),
-            getAccountFeedbackData(accountId, nameFilter, rangeAnterior),
-          ]);
-          setStore(key, data ? { status: 'done', data, anterior } : { status: 'empty' });
+          const data = await getAccountFeedbackData(accountId, nameFilter);
+          setStore(key, data ? { status: 'done', data } : { status: 'empty' });
         } catch (err: any) {
           setStore(key, { status: 'error', message: err?.message ?? 'Erro desconhecido' });
         }
@@ -240,7 +221,7 @@ export function MetaFeedbackView({ accounts }: Props) {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {stores.map(({ key, name }) => {
           const state = states[key];
-          const message = state.status === 'done' ? buildMessage(name, state.data, state.anterior) : '';
+          const message = state.status === 'done' ? buildMessage(name, state.data) : '';
 
           return (
             <div
