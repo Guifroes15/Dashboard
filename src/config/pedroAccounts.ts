@@ -2,9 +2,20 @@
 // parte dos grupos/lojas da Aure, existem só pra esse login ver em Feedbacks
 // Meta e Saldo Meta Ads (ver escopoRestrito em AccessGate.tsx e App.tsx).
 //
-// IDs confirmados direto na Graph API. Faltam ~15 contas do print original
-// que vieram sem ID legível (Hope Shopping, Puca Estrela, Victor Hugo etc.)
-// — adicionar aqui quando o Guilherme mandar os IDs certos.
+// IDs confirmados direto na Graph API. As com o comentário "aguardando
+// permissão" existem de verdade (a Graph API confirma), mas o token que
+// o dashboard usa (usuário de sistema do Elisson) ainda não tem acesso
+// liberado a elas — precisa o Guilherme compartilhar essas contas com
+// esse usuário de sistema no Business Manager (Configurações do Negócio →
+// Contas de anúncio → selecionar → atribuir usuário de sistema). Depois
+// disso elas passam a funcionar sozinhas, sem precisar mexer aqui de novo.
+//
+// Ainda faltam (vieram corrompidas ou com ID incerto no print, pedir de
+// novo pro Guilherme/Pedro): Hope Shopping Vila Velha, Hope Praia da
+// Costa, Carriella, Magazine da Lingerie, Casa Bragança - Cambuí, e
+// Victor Hugo Bosque/Belém/Ribeirão (os 3 vieram com o mesmo ID de 14
+// dígitos, o que sugere corte no meio do número — só a Victor Hugo
+// Manauara veio com ID completo e íntegro).
 export interface PedroAccount {
   id: string;
   name: string;
@@ -30,4 +41,19 @@ export const PEDRO_ACCOUNTS: PedroAccount[] = [
   { id: 'usaflex-maringa-park',         name: 'Usaflex Maringá Park',                color: '#0891b2', metaAccountId: 'act_520031450590962' },
   { id: 'tricolandia-artesanatos',      name: 'Tricolândia Artesanatos',             color: '#84cc16', metaAccountId: 'act_635000345574936' },
   { id: 'tricolandia-festas',           name: 'Tricolândia Festas',                  color: '#65a30d', metaAccountId: 'act_1051733943385648' },
+
+  // Confirmadas na API (nome bateu certinho e o token já tem acesso):
+  { id: 'victor-hugo-manauara',         name: 'Victor Hugo Manauara',                color: '#f59e0b', metaAccountId: 'act_987229157329989' },
+  { id: 'puca-estrela',                 name: 'Puca Estrela',                        color: '#d946ef', metaAccountId: 'act_1793623881223925' },
+  { id: 're-sales',                     name: 'Re Sales',                            color: '#0d9488', metaAccountId: 'act_1288599192533463' },
+
+  // ID existe de verdade na Graph API, mas aguardando o Guilherme liberar
+  // acesso pro usuário de sistema no Business Manager (ver comentário no
+  // topo do arquivo) — aparecem com erro de permissão até isso acontecer.
+  { id: 'milon',                        name: 'Milon',                               color: '#fb923c', metaAccountId: 'act_155969356388532' },
+  { id: 'razor-bros',                   name: 'Razor Bros',                          color: '#64748b', metaAccountId: 'act_1376396568276650' },
+  { id: 'lojas-vitan',                  name: 'Lojas Vitan',                         color: '#94a3b8', metaAccountId: 'act_1550118365426800' },
+  { id: 'atitude-news',                 name: 'Atitude News',                        color: '#facc15', metaAccountId: 'act_2230118027763937' },
+  { id: 'luz-da-lua-lv-velasco',        name: 'Luz da Lua L V Velasco',              color: '#38bdf8', metaAccountId: 'act_5224788939451003' },
+  { id: 'luz-da-lua-galdino-ribeiro',   name: 'Luz da Lua Galdino Ribeiro',          color: '#0284c7', metaAccountId: 'act_1129052142902603' },
 ];
