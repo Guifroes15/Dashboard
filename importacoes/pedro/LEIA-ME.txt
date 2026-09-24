@@ -1,0 +1,11 @@
+PASTA DE IMPORTAÇÃO — CLIENTES DO PEDRO
+
+Como usar:
+1. Baixe a planilha do Pedro (Google Sheets: Arquivo > Fazer download > CSV ou .xlsx).
+2. Solte o arquivo AQUI nesta pasta.
+3. Me avise no chat que subiu. Eu leio o arquivo, confiro cada ID na API do Meta
+   e atualizo a lista de clientes do Pedro no dashboard.
+
+Colunas que preciso na planilha: nome do cliente (Empresa) e ID da conta de anúncio.
+
+Importante: os arquivos daqui NÃO vão pro GitHub (ficam só no seu computador).
