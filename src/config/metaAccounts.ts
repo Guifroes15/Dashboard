@@ -33,6 +33,7 @@ export const META_ACCOUNTS: Record<string, string> = {
   'democrata-buriti':    'act_535906296045800',
   'democrata-passeio-das-aguas': 'act_675322040452108',
   'democrata-valparaiso': 'act_2223349708240263',
+  'pisale-calcados':      'act_2933989090179245',
   'guapa':               'act_762506169917049',
   'taco-montes-claros':  'act_1537993077200896',
   'sonho-dos-pes-colatina':    'act_2196645040702961',
