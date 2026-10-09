@@ -35,6 +35,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   'democrata-passeio-das-aguas': 'Democrata Passeio das Águas',
   'democrata-valparaiso': 'Democrata Valparaíso',
   'pisale-calcados':      'Pisalé Calçados',
+  'democrata-santa-barbara': 'Democrata Santa Bárbara',
   'guapa':               'Guapa',
   'taco-montes-claros':  'Taco Montes Claros',
   'sonho-dos-pes-colatina':   'Sonho dos Pés - Colatina',

@@ -20,6 +20,7 @@ const AVULSOS_STORES = [
   { id: 'democrata-passeio-das-aguas', name: 'Democrata Passeio das Águas', color: '#38bdf8', fee: 1500 },
   { id: 'democrata-valparaiso', name: 'Democrata Valparaíso', color: '#2563eb', fee: 1500 },
   { id: 'pisale-calcados',      name: 'Pisalé Calçados',      color: '#dc2626', fee: 1500 },
+  { id: 'democrata-santa-barbara', name: 'Democrata Santa Bárbara', color: '#1d4ed8', fee: 1500 },
   { id: 'guapa',               name: 'Guapa',               color: '#a855f7', fee: 1125 },
   { id: 'taco-montes-claros',  name: 'Taco Montes Claros',  color: '#14b8a6', fee: 1500 },
   { id: 'sonho-dos-pes-colatina',   name: 'Sonho dos Pés - Colatina',   color: '#ef4444', fee: 2200 },
